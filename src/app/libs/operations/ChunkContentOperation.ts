@@ -5,6 +5,10 @@ import { EXT_TO_LANG } from "#app/settings.js";
 import AbstractOperation from "./AbstractOperation.js";
 import { calculateSHA256 } from "../helpers.js";
 import DocumentRepo from "#app/repositories/DocumentRepo.js";
+import CCodeSplitter from "../splitters/CCodeSplitter.js";
+
+/** Extensions routed to the structure-aware C/C++ splitter. */
+export const C_FAMILY_EXTENSIONS = ['c', 'h', 'cc', 'cpp', 'cxx', 'hpp', 'hh', 'hxx'];
 
 export default class ChunkContentOperation extends AbstractOperation {
   public static readonly operationName: string  = 'chunkContent';
@@ -19,13 +23,22 @@ export default class ChunkContentOperation extends AbstractOperation {
   }
 
   async performChunking(record: Document, extra: StdClass = {}): Promise<OperationResult> {
-    const chunkSize = extra.chunkSize as number || 2000;
-    const chunkOverlap = extra.chunkOverlap as number || 200;
+    const ext = record.metadata?.fileExtension ? (record.metadata?.fileExtension as string).toLowerCase() : 'txt';
+    const isCFamily = C_FAMILY_EXTENSIONS.includes(ext);
 
-    const ext = record.metadata?.fileExtension ? record.metadata?.fileExtension as string : 'txt';
-    const lang = this.getLanguageFromExt(ext);
+    // C functions (especially in Nginx) are long; a bigger default keeps a whole
+    // function - allocation, length computation and copy - in a single chunk.
+    // Override with CHUNK_SIZE_C / CHUNK_OVERLAP_C in .env (values in characters).
+    const chunkSize = extra.chunkSize as number
+      || (isCFamily ? Number(process.env.CHUNK_SIZE_C) || 3000 : 2000);
+    const chunkOverlap = extra.chunkOverlap as number
+      || (isCFamily ? Number(process.env.CHUNK_OVERLAP_C) || 200 : 200);
 
-    const recSplitter = this.getSplitter(lang, chunkSize, chunkOverlap);
+    const lang = isCFamily ? (ext === 'c' || ext === 'h' ? 'c' : 'cpp') : this.getLanguageFromExt(ext);
+
+    const recSplitter = isCFamily
+      ? new CCodeSplitter({ chunkSize, chunkOverlap })
+      : this.getSplitter(lang as SupportedTextSplitterLanguage | null, chunkSize, chunkOverlap);
 
     const splits = await recSplitter.createDocuments([record.content as string], [{
       language: lang,
@@ -101,4 +114,4 @@ export default class ChunkContentOperation extends AbstractOperation {
     
     return null;
   }
-}
+}

@@ -13,7 +13,14 @@ console.log("Core bootstrap completed.");
 console.log('---------------------------------------------------------');
 console.log('|               STARTING MASTER OPERATION               |');
 console.log('---------------------------------------------------------');
-const loader = new MasterOperation(['./source-code'], ['js', 'txt', 'md']);
+// Default: C/C++ sources and headers (e.g. the Nginx tree). Override with SCAN_EXTENSIONS=c,h,md
+const extensions = (process.env.SCAN_EXTENSIONS || 'c,h')
+  .split(',')
+  .map((ext) => ext.trim().replace(/^\./, ''))
+  .filter(Boolean);
+console.log('Scanning ./source-code for extensions:', extensions.join(', '));
+
+const loader = new MasterOperation(['./source-code'], extensions);
 const chunks = await loader.loadDbMasterData(['chunkContent', 'summarizeContent', 'storeInVectorDb']);
 const chunkIds = chunks.map((doc) => doc.id);
 
@@ -55,4 +62,4 @@ async function runOperations(includeFailed: boolean = false) {
     const opResult = await runner.run(doc);
     console.log('Operation done', opResult);
   }
-}
+}

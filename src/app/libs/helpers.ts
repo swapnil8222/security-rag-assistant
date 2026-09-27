@@ -14,12 +14,13 @@ export function calculateSHA256(inputString: string): string {
 }
 
 export function extToLang(ext: string): string | null {
-  return EXT_TO_LANG[ext] ?? null;
+  return EXT_TO_LANG[ext.replace(/^\./, '').toLowerCase()] ?? null;
 }
 
 export function isACodingLanguage(lang: string): boolean {
   return [
     'html',
+    'c',
     'cpp',
     'go',
     'java',
@@ -45,4 +46,4 @@ export function errorWithCause(message: string, error: any): Error {
       ...(error.cause && { cause: String(error.cause) }),
     }
   });
-}
+}

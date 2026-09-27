@@ -54,7 +54,11 @@ async function initServices() {
         host: process.env.LLM_HOST as string,
         port: process.env.LLM_PORT as string,
         defaultLlm: process.env.LLM_MODEL as string,
-        defaultEmbedding: process.env.LLM_EMBEDDING_MODEL as string
+        defaultEmbedding: process.env.LLM_EMBEDDING_MODEL as string,
+        // Larger context window so several C chunks fit in one RAG prompt
+        numCtx: process.env.LLM_NUM_CTX ? Number(process.env.LLM_NUM_CTX) : undefined,
+        // Low temperature: auditing answers should be precise, not creative
+        temperature: process.env.LLM_TEMPERATURE ? Number(process.env.LLM_TEMPERATURE) : undefined
       }
     );
 
@@ -84,4 +88,4 @@ async function initServices() {
   console.log('LLM service initialized.');
 
 
-}
+}

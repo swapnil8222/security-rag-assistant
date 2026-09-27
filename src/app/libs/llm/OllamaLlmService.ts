@@ -11,6 +11,8 @@ type LlmSetting = {
   port: string
   defaultLlm: string
   defaultEmbedding: string
+  numCtx?: number
+  temperature?: number
 }
 
 export default class OllamaLlmService implements LlmServiceInterface {
@@ -48,7 +50,9 @@ export default class OllamaLlmService implements LlmServiceInterface {
 
     this.llmInstances[model] = new Ollama({
       model,
-      baseUrl: `http://${this.llmSetting.host}:${this.llmSetting.port}`
+      baseUrl: `http://${this.llmSetting.host}:${this.llmSetting.port}`,
+      ...(this.llmSetting.numCtx && { numCtx: this.llmSetting.numCtx }),
+      ...(this.llmSetting.temperature !== undefined && { temperature: this.llmSetting.temperature })
     });
 
     return this.llmInstances[model];
@@ -103,4 +107,4 @@ export default class OllamaLlmService implements LlmServiceInterface {
 
     return models.map(model => model.name as string).includes(model);
   }
-}
+}

@@ -39,6 +39,9 @@ export default class SummarizeContentOperation extends AbstractOperation {
           fileExtensions: record.metadata?.fileExtensions,
           loc: record.metadata?.loc,
           splits: record.metadata?.splits,
+          fromLine: record.metadata?.fromLine,
+          toLine: record.metadata?.toLine,
+          symbols: record.metadata?.symbols,
         },
         operations: {
           storeInVectorDb: 0
@@ -63,16 +66,25 @@ export default class SummarizeContentOperation extends AbstractOperation {
       contextInfo += ` - Coding language: ${codingLang}\n`;
     }
 
-    if (record.metadata?.filemane) {
-      contextInfo += ` - Coding language: ${record.metadata.filemane}\n`;
+    if (record.filename) {
+      contextInfo += ` - File: ${record.filename}\n`;
+    }
+
+    if (record.metadata?.fromLine && record.metadata?.toLine) {
+      contextInfo += ` - Lines: ${record.metadata.fromLine}-${record.metadata.toLine}\n`;
+    }
+
+    if (record.metadata?.symbols) {
+      contextInfo += ` - Functions / types in this chunk: ${record.metadata.symbols}\n`;
     }
 
     if (codingLang && isACodingLanguage(codingLang)) {
-      return await agent.describeCode(record.content as string, contextInfo);
+      const description = await agent.describeCode(record.content as string, contextInfo);
+      return description.replace(/<think>.*?<\/think>/gs, '').trim();
     }
     
     const summary = await agent.summarizeText(record.content as string, contextInfo);
     return summary.replace(/<think>.*?<\/think>/gs, '').trim();
   }
 
-}
+}

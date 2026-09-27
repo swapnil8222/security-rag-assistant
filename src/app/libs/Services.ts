@@ -34,11 +34,11 @@ export default class Services {
   }
 
   public static env(key: string | null = null, defaultValue: unknown = undefined) {
-    if (key && typeof Services.processEnv[key] !== undefined) {
+    if (key && typeof Services.processEnv[key] !== 'undefined') {
       return Services.processEnv[key];
     }
 
     return defaultValue;
   }
 
-}
+}

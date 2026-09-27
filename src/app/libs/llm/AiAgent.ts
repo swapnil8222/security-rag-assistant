@@ -87,40 +87,66 @@ export default class AiAgent {
     return await chain.invoke({ userQuery, contextData });
   }
 
+  /**
+   * Builds the "Context" block of the RAG prompt. Each retrieved chunk is
+   * paired with its summary and prefixed with a header (file, line range,
+   * functions) so the auditor LLM can cite exact locations.
+   */
   async getChunksForFinalQuestionAsText(
     searchResult: DocumentInterface<Record<string, any>>[]
   ): Promise<string> {
     const processed: string[] = [];
-    let text = '';
+    const sections: string[] = [];
 
     for (let i = 0; i < searchResult.length; i++) {
-      const sha256 = searchResult[i].metadata.sha256;
-      const summaryOf = searchResult[i].metadata.summaryOf ?? null;
-      
-      if (processed.includes(sha256) || processed.includes(summaryOf)) {
+      const meta = searchResult[i].metadata;
+      const sha256 = meta.sha256;
+      const summaryOf = meta.summaryOf ?? null;
+
+      if (processed.includes(sha256) || (summaryOf && processed.includes(summaryOf))) {
         continue;
       }
 
+      let summary = '';
+      let code = '';
+      let codeMeta: Record<string, any> = meta;
+
       if (summaryOf) {
-        text += searchResult[i].pageContent;
+        // the hit is a summary: fetch the code chunk it describes
+        summary = searchResult[i].pageContent;
         const doc = await this.getDocumentBySha(summaryOf);
         if (doc) {
-          text += '\n\n' + doc.content;
+          code = doc.content ?? '';
+          codeMeta = { ...(doc.metadata as Record<string, any> ?? {}), filename: doc.filename };
           processed.push(doc.sha256);
         }
       } else {
+        // the hit is a code chunk: fetch its summary
+        code = searchResult[i].pageContent;
         const doc = await this.getDocumentBySummaryOf(sha256);
         if (doc) {
-          text += doc.content + '\n\n';
+          summary = doc.content ?? '';
           processed.push(doc.sha256);
         }
-        text += searchResult[i].pageContent;
       }
 
       processed.push(sha256);
+
+      sections.push([
+        this.formatChunkHeader(sections.length + 1, codeMeta),
+        summary ? `Summary: ${summary.trim()}` : '',
+        code ? '```' + (codeMeta.language ?? 'c') + '\n' + code.trim() + '\n```' : '',
+      ].filter(Boolean).join('\n'));
     }
-    
-    return text;
+
+    return sections.join('\n\n');
+  }
+
+  private formatChunkHeader(index: number, meta: Record<string, any>): string {
+    const filename = String(meta.filename ?? 'unknown file').replace(/^.*[\\/]source-code[\\/]/, '');
+    const lines = meta.fromLine && meta.toLine ? ` (lines ${meta.fromLine}-${meta.toLine})` : '';
+    const symbols = meta.symbols ? ` | ${meta.symbols}` : '';
+    return `### [${index}] ${filename}${lines}${symbols}`;
   }
 
   /**
@@ -162,10 +188,11 @@ export default class AiAgent {
       }
 
       refinedQuestion = await this.refinePrompt(userQuestion, this.llmService.getLlm(modelStr));
-      refinedQuestion = userQuestion.replace(/<think>[\s\S]*?<\/think>\s*/, '').trim();
+      // strip the reasoning block that "thinking" models (e.g. qwen3) emit
+      refinedQuestion = refinedQuestion.replace(/<think>[\s\S]*?<\/think>\s*/, '').trim();
     }
 
     return refinedQuestion;
   }
 
-}
+}

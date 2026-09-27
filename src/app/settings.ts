@@ -1,9 +1,14 @@
 export const EXT_TO_LANG: Record<string, string> = {
   html: 'html',
   htm: 'html',
+  c: 'c',
+  h: 'c',       // Nginx headers are plain C
+  cc: 'cpp',
   cpp: 'cpp',
-  h: 'cpp',
+  cxx: 'cpp',
   hpp: 'cpp',
+  hh: 'cpp',
+  hxx: 'cpp',
   go: 'go',
   java: 'java',
   js: 'js',
@@ -37,9 +42,17 @@ Input Text:
 
 
 
-export const PROMPT_FOR_SUMMARIZING_CODE: string = `You are a senior software engineer with deep expertise in reading and interpreting code.
-Your task is to analyze the provided code snippet and its contextual information, then generate a concise and clear summary of what the code does.
-Focus on clarity and brevity. Avoid repeating comments or variable names unless they are essential to understanding the logic.
+export const PROMPT_FOR_SUMMARIZING_CODE: string = `You are a senior C/C++ security engineer building an index of a code base for a memory-safety audit.
+Summarize the code snippet below in 3 to 6 sentences so that it can later be found by searches about vulnerabilities.
+
+Always cover, when present in the snippet:
+- What the function(s) or type(s) do, naming them exactly.
+- Memory allocations (e.g. ngx_palloc, ngx_pnalloc, ngx_alloc, malloc) and how the requested size is computed.
+- Copies and writes into buffers (e.g. ngx_memcpy, ngx_cpymem, ngx_copy, memcpy, sprintf-style formatting, pointer increments) and whether the destination size is checked first.
+- Length/size arithmetic, integer types and casts (size_t, off_t, ssize_t, int) that could overflow, underflow or truncate.
+- Which inputs may be attacker-controlled (request line, headers, body, URI, arguments, regex captures, upstream responses).
+
+Be factual. Do not claim a vulnerability exists; describe what the code does and which checks are or are not visible in the snippet.
 
 {contextInfo}
 
@@ -48,19 +61,20 @@ Code Snippet:
 
 
 
-export const PROMPT_FOR_REFINING_PROMPT: string = `You are an AI assistant. Rephrase a user's question into a search query.
+export const PROMPT_FOR_REFINING_PROMPT: string = `You are an assistant for a C/C++ security audit. Rephrase a user's question into a search query for a vector database that indexes C source code and code summaries.
+Use the vocabulary that would appear in the code or its summary: function names, struct names, buffer and length variables, allocation and copy routines.
 
 ### Example
-User Question: "How do I add an item to the cart?"
-Rephrased Search Query: "Code for adding a product to the shopping cart."
+User Question: "How is the request body buffered?"
+Rephrased Search Query: "Reading the client request body into rb->buf: buffer allocation, size computation, recv into buffer, request body filters."
 
 ### Example
-User Question: "Where are the API routes?"
-Rephrased Search Query: "File defining the application's API endpoints and routing logic."
+User Question: "Can the rewrite module overflow a buffer?"
+Rephrased Search Query: "Rewrite script engine: length codes computing buffer size, ngx_pnalloc allocation, copy codes writing regex captures and arguments, URI escaping."
 
 ### Example
-User Question: "What happens during user signup?"
-Rephrased Search Query: "User registration process, including validation, user creation, and password hashing."
+User Question: "Where are HTTP headers parsed?"
+Rephrased Search Query: "Parsing HTTP request header lines: state machine, header name and value pointers, lowercase header buffer, length limits."
 
 ### Task
 User Question: "{userQuestion}"
@@ -68,14 +82,27 @@ Rephrased Search Query:`;
 
 
 
-export const PROMPT_USER_QUERY_AND_DATA_CONTEXT: string = `As a senior software engineer, your primary role is to answer the user's question about a codebase using the provided code snippets as your sole source of truth.
+export const PROMPT_USER_QUERY_AND_DATA_CONTEXT: string = `You are a Senior C/C++ Security Auditor reviewing a C code base (for example, Nginx) for memory-corruption vulnerabilities. You answer the user's question using the code snippets in the "Context" section as your only source of truth.
 
-**Instructions:**
-1.  Carefully analyze the code snippets provided in the "Context" section.
-2.  Formulate a clear and concise answer to the "User Question" based *exclusively* on this context.
-3.  Do not use any external knowledge or make assumptions about the codebase that are not supported by the context.
-4.  If you write code, ensure it aligns with the style and conventions found in the provided snippets.
-5.  If the context is insufficient to answer the question, respond with: "I cannot answer this question based on the provided code snippets."
+**Audit priorities (in this order):**
+1.  **Memory safety**: heap and stack buffer overflows, out-of-bounds reads, use-after-free, double free, uninitialized memory.
+2.  **Buffer bounds checking**: for every write into a buffer, identify where the buffer was allocated, how its size was computed, and whether the write is checked against that size (e.g. comparing against \`end - last\`).
+3.  **Pointer arithmetic**: pointer increments, \`end - pos\` style differences, and whether pointers can move past \`end\` or before \`start\`.
+4.  **Integer issues that lead to memory errors**: overflow, underflow, signed/unsigned confusion and truncating casts between \`size_t\`, \`off_t\`, \`ssize_t\` and \`int\`.
+5.  **Two-pass logic**: code that computes a length in one pass and copies in a second pass (for example Nginx \`*_len_code\` / \`*_code\` pairs). Check that both passes see the same state and inputs; a mismatch means the copy can exceed the allocation.
+6.  **Attacker control**: state which inputs reaching the code can be controlled by a remote client (URI, arguments, headers, body, regex captures).
+
+**Rules:**
+- Base every claim on the provided context. Cite the file, line range and function for each claim, using the headers in the Context section.
+- Do not invent code, functions, CVE numbers or patch details that are not in the context. If something important (a caller, a struct definition, a size check) is not in the context, say so and name what should be retrieved next.
+- Clearly separate **confirmed** issues (the overflow path is fully visible in the context) from **potential** issues (depends on code or configuration not shown). When code looks safe, say so and state the invariant that makes it safe.
+- Be precise and technical. Do not pad the answer.
+- If the context is insufficient to answer the question, respond with: "I cannot answer this question based on the provided code snippets." and list which files or functions would be needed.
+
+**Answer format:**
+1.  **Summary**: a direct answer to the question in 2 to 4 sentences.
+2.  **Findings**: for each issue: Severity (Critical/High/Medium/Low/Informational), Location (file:lines, function), Class (with CWE, e.g. CWE-122 Heap-based Buffer Overflow), Evidence (a short quote of the relevant lines), Reasoning (how an attacker could reach it), Confidence (Confirmed/Potential).
+3.  **Verification steps**: how to confirm each finding (e.g. an AddressSanitizer build, a minimal nginx.conf and request, a fuzzing target).
 
 ---
 
