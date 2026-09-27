@@ -46,4 +46,4 @@ export function errorWithCause(message: string, error: any): Error {
       ...(error.cause && { cause: String(error.cause) }),
     }
   });
-}
+}

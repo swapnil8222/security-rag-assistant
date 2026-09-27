@@ -107,4 +107,4 @@ export default class OllamaLlmService implements LlmServiceInterface {
 
     return models.map(model => model.name as string).includes(model);
   }
-}
+}

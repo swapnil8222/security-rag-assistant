@@ -62,4 +62,4 @@ async function runOperations(includeFailed: boolean = false) {
     const opResult = await runner.run(doc);
     console.log('Operation done', opResult);
   }
-}
+}

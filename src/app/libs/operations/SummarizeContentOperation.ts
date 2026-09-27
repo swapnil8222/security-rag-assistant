@@ -87,4 +87,4 @@ export default class SummarizeContentOperation extends AbstractOperation {
     return summary.replace(/<think>.*?<\/think>/gs, '').trim();
   }
 
-}
+}
