@@ -22,7 +22,9 @@ export default class SummarizeContentOperation extends AbstractOperation {
 
     try {
       const summary = await this.summarize(record);
-      const sha256 = calculateSHA256(summary);
+      // Include the source chunk's hash: two different chunks can get the same
+      // summary text, and sha256 must be unique in the documents table.
+      const sha256 = calculateSHA256(`${record.sha256}\n${summary}`);
   
       if (await DocumentRepo.documentExists(record.filename, sha256)) {
         return this.successResponse(`The content with filename ${record.filename} and sha256 ${sha256} already exists.`);
