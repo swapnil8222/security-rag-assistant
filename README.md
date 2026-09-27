@@ -106,7 +106,7 @@ The summarization and query-rewriting prompts in the same file are tuned for C s
 ### 2. Install
 
 ```sh
-git clone <your-fork-url> security-rag-assistant
+git clone https://github.com/swapnil8222/security-rag-assistant.git
 cd security-rag-assistant
 npm install --legacy-peer-deps
 cp .env.example .env
