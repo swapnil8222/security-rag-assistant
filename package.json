@@ -1,7 +1,7 @@
 {
-  "name": "fullstack-app-starter-ts",
+  "name": "security-rag-assistant",
   "version": "1.0.0",
-  "description": "Fullstack application converted to TypeScript",
+  "description": "Local RAG assistant for auditing C/C++ code (Nginx) for memory-safety bugs",
   "main": "dist/index.js",
   "type": "module",
   "engines": {
@@ -11,11 +11,16 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
+    "load-docs": "tsx src/scripts/scan-docs.ts",
     "scan-docs": "tsx src/scripts/scan-docs.ts",
-    "load-docs": "tsx src/scripts/scan-docs.ts"
+    "ask": "tsx src/scripts/ask.ts",
+    "eval": "tsx src/scripts/eval-retrieval.ts",
+    "chunk-stats": "tsx src/scripts/chunk-stats.ts",
+    "test": "tsx --test test/*.test.ts",
+    "reset-failed": "tsx src/scripts/reset-failed.ts"
   },
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "imports": {
     "#app/*": "./dist/app/*",
     "#core/*": "./dist/core/*"

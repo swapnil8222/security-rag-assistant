@@ -22,5 +22,19 @@ export type VectorStoreEntry = {
 export type RagOptions = {
   refineUserPrompt: boolean,
   similaritySearchResults: number,
-  model: null | string
+  model: null | string,
+  /** Restrict retrieval to one indexed code base, e.g. "nginx-1.30.0". */
+  codebase?: null | string,
+  /** Also fetch chunks that define C identifiers named in the question (default true). */
+  symbolLookup?: boolean,
+}
+
+export type RetrievedSource = {
+  via: 'symbol' | 'vector',
+  filename: string,
+  codebase: string | null,
+  fromLine: number | null,
+  toLine: number | null,
+  symbols: string | null,
+  isSummary: boolean,
 }

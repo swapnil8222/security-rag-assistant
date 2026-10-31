@@ -13,6 +13,36 @@ export function calculateSHA256(inputString: string): string {
   return hash.digest('hex');
 }
 
+/**
+ * Removes the <think>...</think> block that reasoning models (e.g. qwen3,
+ * deepseek-r1) prepend to their output.
+ */
+export function stripThinking(text: string): string {
+  return String(text ?? '').replace(/<think>[\s\S]*?<\/think>\s*/g, '').trim();
+}
+
+/**
+ * Name of the code base a file belongs to: the first folder under the scanned
+ * root. With `source-code/nginx-1.30.0/src/http/x.c` this is `nginx-1.30.0`.
+ * It lets several versions of the same project live in one index and be
+ * queried separately (vulnerable vs. patched).
+ */
+export function codebaseFromPath(scanRoot: string, filePath: string): string {
+  const rel = filePath.slice(scanRoot.length).replace(/^[\\/]+/, '');
+  const parts = rel.split(/[\\/]/);
+  return parts.length > 1 ? parts[0] : 'default';
+}
+
+/**
+ * Pulls C-style identifiers out of a question (e.g. `ngx_http_script_copy_capture_code`,
+ * `rb->buf` gives nothing, `is_args` is kept). Only names with an underscore
+ * are kept, so ordinary English words are ignored.
+ */
+export function extractCIdentifiers(text: string): string[] {
+  const ids = String(text).match(/\b[A-Za-z_][A-Za-z0-9]*_[A-Za-z0-9_]+\b/g) ?? [];
+  return [...new Set(ids)].filter((id) => id.length >= 5);
+}
+
 export function extToLang(ext: string): string | null {
   return EXT_TO_LANG[ext.replace(/^\./, '').toLowerCase()] ?? null;
 }
@@ -39,7 +69,7 @@ export function isACodingLanguage(lang: string): boolean {
 }
 
 export function errorWithCause(message: string, error: any): Error {
-  return new Error('Failed to fetch data from Ollama', {
+  return new Error(message, {
     cause: {
       message: error.message,
       stack: error.stack,

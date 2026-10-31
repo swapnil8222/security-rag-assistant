@@ -42,12 +42,30 @@ export default class ChunkContentOperation extends AbstractOperation {
 
     const splits = await recSplitter.createDocuments([record.content as string], [{
       language: lang,
-      fileExtensions: ext
+      fileExtension: ext,
+      codebase: record.metadata?.codebase,
     }]);
 
-    if (splits.length === 1) {
-      return this.successResponse('Total split is 1. Skipping it.');
+    if (splits.length <= 1) {
+      // Small file: the file record itself is the chunk that gets summarized
+      // and embedded. Give it the same line/symbol metadata as a real chunk.
+      const only = splits[0]?.metadata ?? {};
+      record.metadata = {
+        ...(record.metadata ?? {}),
+        isSplit: false,
+        ...(only.loc?.lines?.from && { fromLine: only.loc.lines.from, toLine: only.loc.lines.to }),
+        ...(only.symbols && { symbols: only.symbols }),
+      };
+      await record.save();
+      return this.successResponse('File fits in one chunk; the file record is used as the chunk.');
     }
+
+    // Large file: only its chunks are summarized and embedded. Summarizing or
+    // embedding the whole file would overflow the LLM context window and put
+    // a whole file into the RAG prompt. See SummarizeContentOperation and
+    // StoreInVectorDbOperation, which skip records with isSplit = true.
+    record.metadata = { ...(record.metadata ?? {}), isSplit: true, splitTotal: splits.length };
+    await record.save();
 
     let splitCounter = 0;
     for (const split of splits) {
@@ -57,7 +75,9 @@ export default class ChunkContentOperation extends AbstractOperation {
         continue;
       }
 
-      const sha256 = calculateSHA256(split.pageContent);
+      // Include the file name: identical chunks can appear in different files
+      // (or in two indexed versions of the same file), and sha256 is unique.
+      const sha256 = calculateSHA256(`${record.filename}\n${split.pageContent}`);
 
       // if the filename/sha256 already exists with a status success, then continue
       if (await DocumentRepo.documentExists(record.filename, sha256)) {
@@ -80,7 +100,7 @@ export default class ChunkContentOperation extends AbstractOperation {
         parentSha256: record.sha256,
         metadata: {
           ...splitMeta,
-          splitNum: splitCounter + 1,
+          splitNum: splitCounter,
           splitTotal: splits.length
         },
         operations: {

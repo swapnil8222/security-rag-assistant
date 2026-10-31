@@ -1,6 +1,8 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { PROMPT_FOR_SUMMARIZING_CODE, PROMPT_FOR_SUMMARIZING_TEXT, PROMPT_FOR_REFINING_PROMPT, PROMPT_USER_QUERY_AND_DATA_CONTEXT } from "#app/settings.js";
-import { RagOptions, StdClass } from "../types.js";
+import { RagOptions, RetrievedSource, StdClass } from "../types.js";
+import { extractCIdentifiers, stripThinking } from "../helpers.js";
+import { Op } from "sequelize";
 import Services from "../Services.js";
 import LlmServiceInterface from "./LlmServiceInterface.js";
 import { BaseLLM } from "@langchain/core/language_models/llms";
@@ -54,26 +56,123 @@ export default class AiAgent {
 
   async rag(userQuery: string, options: RagOptions) {
     // 1) refine user prompt
-    let refinedUserQuery = await this.refineUserQuery(userQuery, options);
+    const refinedUserQuery = await this.refineUserQuery(userQuery, options);
 
-    // 2) query vector store
-    const vectorStore = Services.vectorStore().getClient();
-    const searchResult = await vectorStore.similaritySearch(refinedUserQuery, options.similaritySearchResults);
+    // 2) hybrid retrieval: exact symbol lookup + vector similarity search
+    const { searchResult, sources } = await this.retrieve(userQuery, refinedUserQuery, options);
 
-    // 3) foreach result retrieve the related piece
-    let contextData = await this.getChunksForFinalQuestionAsText(searchResult);
+    // 3) foreach result retrieve the related piece (code <-> summary)
+    const contextData = await this.getChunksForFinalQuestionAsText(searchResult);
 
     // 4) combine the user query and the data from the vector store in a prompt and send it to the LLM
     const model = Services.llmService().getDefaultLlm();
-    const finalAnswer = await this.getFinalAnswer(userQuery,contextData, model);
+    const finalAnswer = stripThinking(await this.getFinalAnswer(userQuery, contextData, model));
 
     return {
       userQuery,
       refinedUserQuery,
+      codebase: options.codebase ?? null,
+      sources,
       searchResult,
       contextData,
       finalAnswer
     }
+  }
+
+  /**
+   * Retrieval step of the RAG pipeline, without the final LLM call. Used by
+   * rag() and by the retrieval evaluation script.
+   *
+   * Embeddings are good at meaning ("where is the URI escaped?") but weak at
+   * exact identifiers: a question naming `ngx_http_script_copy_capture_code`
+   * may not retrieve that function. So C identifiers in the question are
+   * also looked up directly in the chunk metadata (the `symbols` field that
+   * CCodeSplitter writes), and those chunks are put first.
+   */
+  async retrieve(userQuery: string, searchQuery: string, options: RagOptions): Promise<{
+    searchResult: DocumentInterface<Record<string, any>>[],
+    sources: RetrievedSource[],
+  }> {
+    const filter = options.codebase ? { codebase: options.codebase } : undefined;
+
+    const symbolHits = options.symbolLookup === false
+      ? []
+      : await this.findChunksDefiningSymbols(extractCIdentifiers(userQuery), options.codebase ?? null);
+
+    const vectorStore = Services.vectorStore().getClient();
+    const vectorHits = await vectorStore.similaritySearch(searchQuery, options.similaritySearchResults, filter);
+
+    const seen = new Set<string>();
+    const searchResult: DocumentInterface<Record<string, any>>[] = [];
+    const sources: RetrievedSource[] = [];
+
+    for (const [via, hits] of [['symbol', symbolHits], ['vector', vectorHits]] as const) {
+      for (const hit of hits) {
+        const sha = hit.metadata?.sha256 as string;
+        if (!sha || seen.has(sha)) continue;
+        seen.add(sha);
+        searchResult.push(hit);
+        sources.push({
+          via,
+          filename: String(hit.metadata.filename ?? ''),
+          codebase: hit.metadata.codebase ?? null,
+          fromLine: hit.metadata.fromLine ?? null,
+          toLine: hit.metadata.toLine ?? null,
+          symbols: hit.metadata.symbols ?? null,
+          isSummary: Boolean(hit.metadata.summaryOf),
+        });
+      }
+    }
+
+    return { searchResult, sources };
+  }
+
+  /**
+   * Finds code chunks whose `symbols` metadata contains one of the given
+   * identifiers (exact match on the comma-separated list). At most
+   * `perSymbol` chunks per identifier, in file order, so a long function
+   * split into several chunks contributes its first parts.
+   */
+  async findChunksDefiningSymbols(
+    identifiers: string[],
+    codebase: string | null,
+    perSymbol: number = 2,
+    maxTotal: number = 6
+  ): Promise<DocumentInterface<Record<string, any>>[]> {
+    const results: DocumentInterface<Record<string, any>>[] = [];
+
+    for (const id of identifiers) {
+      if (results.length >= maxTotal) break;
+
+      // Match the symbol in the JSON `symbols` field. The code-chunk vs summary
+      // distinction (summaryOf is null) is done in JS below, not in SQL: an
+      // `IS NULL` check on a json_extract expression generates invalid SQL.
+      const where: StdClass = {
+        'metadata.symbols': { [Op.like]: `%${id}%` },
+      };
+      if (codebase) {
+        where['metadata.codebase'] = codebase;
+      }
+
+      const rows: Document[] = await Document.findAll({ where: where as any, limit: 50 });
+
+      const exact = rows
+        .filter((row: Document) => !row.metadata?.summaryOf
+          && String(row.metadata?.symbols ?? '').split(/,\s*/).includes(id))
+        .sort((a: Document, b: Document) =>
+          String(a.filename).localeCompare(String(b.filename))
+          || Number(a.metadata?.fromLine ?? 0) - Number(b.metadata?.fromLine ?? 0))
+        .slice(0, perSymbol);
+
+      for (const row of exact) {
+        results.push({
+          pageContent: row.content ?? '',
+          metadata: { ...(row.metadata ?? {}), sha256: row.sha256, filename: row.filename },
+        } as DocumentInterface<Record<string, any>>);
+      }
+    }
+
+    return results.slice(0, maxTotal);
   }
 
   async getFinalAnswer(userQuery: string, contextData: string, model: BaseLLM): Promise<string> {
@@ -143,6 +242,7 @@ export default class AiAgent {
   }
 
   private formatChunkHeader(index: number, meta: Record<string, any>): string {
+    // filename is relative to source-code/, so it already starts with the code base folder
     const filename = String(meta.filename ?? 'unknown file').replace(/^.*[\\/]source-code[\\/]/, '');
     const lines = meta.fromLine && meta.toLine ? ` (lines ${meta.fromLine}-${meta.toLine})` : '';
     const symbols = meta.symbols ? ` | ${meta.symbols}` : '';
@@ -188,8 +288,8 @@ export default class AiAgent {
       }
 
       refinedQuestion = await this.refinePrompt(userQuestion, this.llmService.getLlm(modelStr));
-      // strip the reasoning block that "thinking" models (e.g. qwen3) emit
-      refinedQuestion = refinedQuestion.replace(/<think>[\s\S]*?<\/think>\s*/, '').trim();
+      // strip the reasoning block that "thinking" models (e.g. qwen3) emit, and wrapping quotes
+      refinedQuestion = stripThinking(refinedQuestion).replace(/^["']|["']$/g, '').trim() || userQuestion;
     }
 
     return refinedQuestion;

@@ -114,7 +114,9 @@ Document.init({
     allowNull: true,
   },
   content: {
-    type: DataTypes.TEXT,
+    // LONGTEXT, not TEXT: TEXT caps at 64 KB and some Nginx source files
+    // (e.g. ngx_http_proxy_module.c, ~146 KB) exceed that.
+    type: DataTypes.TEXT('long'),
     allowNull: true  
   },
   metadata: {

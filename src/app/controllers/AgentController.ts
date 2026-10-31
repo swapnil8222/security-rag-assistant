@@ -72,6 +72,12 @@ export default class AgentController extends BaseController {
     if (data.similaritySearchResults !== undefined) {
       options.similaritySearchResults = data.similaritySearchResults as number;
     }
+    if (typeof data.codebase === 'string' && data.codebase.trim()) {
+      options.codebase = data.codebase.trim();
+    }
+    if (data.symbolLookup !== undefined) {
+      options.symbolLookup = Boolean(data.symbolLookup);
+    }
     if (data.model !== undefined) {
       options.model = data.model as string;
 

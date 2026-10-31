@@ -5,3 +5,5 @@ package-lock.json
 client/package-lock.json
 .env
 .vscode
+_nginx-full-*/
+SETUP_LOG.md

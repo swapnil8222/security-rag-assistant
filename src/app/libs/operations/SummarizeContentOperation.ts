@@ -2,7 +2,7 @@ import Document from "#app/models/Document.js";
 import { BaseLLM } from "@langchain/core/language_models/llms";
 import { OperationResult, StdClass } from "../types.js";
 import AbstractOperation from "./AbstractOperation.js";
-import { calculateSHA256, isACodingLanguage } from "../helpers.js";
+import { calculateSHA256, isACodingLanguage, stripThinking } from "../helpers.js";
 import DocumentRepo from "#app/repositories/DocumentRepo.js";
 import Services from "../Services.js";
 
@@ -18,6 +18,10 @@ export default class SummarizeContentOperation extends AbstractOperation {
 
     if (!record.content || !record.content.trim().length) {
       return this.successResponse('Skipped: content is empty.');
+    }
+
+    if (record.metadata?.isSplit) {
+      return this.successResponse('Skipped: file was split into chunks; the chunks are summarized instead.');
     }
 
     try {
@@ -38,9 +42,8 @@ export default class SummarizeContentOperation extends AbstractOperation {
         metadata: {
           summaryOf: record.sha256,
           language: record.metadata?.language,
-          fileExtensions: record.metadata?.fileExtensions,
-          loc: record.metadata?.loc,
-          splits: record.metadata?.splits,
+          fileExtension: record.metadata?.fileExtension,
+          codebase: record.metadata?.codebase,
           fromLine: record.metadata?.fromLine,
           toLine: record.metadata?.toLine,
           symbols: record.metadata?.symbols,
@@ -82,11 +85,10 @@ export default class SummarizeContentOperation extends AbstractOperation {
 
     if (codingLang && isACodingLanguage(codingLang)) {
       const description = await agent.describeCode(record.content as string, contextInfo);
-      return description.replace(/<think>.*?<\/think>/gs, '').trim();
+      return stripThinking(description);
     }
     
-    const summary = await agent.summarizeText(record.content as string, contextInfo);
-    return summary.replace(/<think>.*?<\/think>/gs, '').trim();
+    return stripThinking(await agent.summarizeText(record.content as string, contextInfo));
   }
 
 }

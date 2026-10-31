@@ -1,6 +1,6 @@
 import path from 'path'; // Import path for resolving folder paths
 import DirectoryScanner from '#app/libs/DirectoryScanner.js';
-import { calculateSHA256, extToLang } from '#app/libs/helpers.js';
+import { calculateSHA256, codebaseFromPath, extToLang } from '#app/libs/helpers.js';
 import DocumentRepo from '#app/repositories/DocumentRepo.js';
 import Document from '#app/models/Document.js';
 
@@ -105,7 +105,10 @@ export default class MasterOperation {
     for (const filePath of matchingFiles) {
       const content: string = await DirectoryScanner.readFileContent(filePath);
 
-      const sha256: string = calculateSHA256(content);
+      // The hash covers the path as well as the content: the documents table
+      // requires a unique sha256, and two versions of the same code base
+      // (e.g. nginx-1.30.0 and nginx-1.30.1) share hundreds of identical files.
+      const sha256: string = calculateSHA256(`${filePath}\n${content}`);
 
       const fileContents: Document[] = await DocumentRepo.getMasterDocument(filePath, sha256);
 
@@ -122,7 +125,8 @@ export default class MasterOperation {
         parentSha256: null, // this is a parent content
         metadata: {
           language: lang,
-          fileExtension: ext
+          fileExtension: ext,
+          codebase: codebaseFromPath(folderToScan, filePath)
         }
       });
     } // end loop for matchingFiles

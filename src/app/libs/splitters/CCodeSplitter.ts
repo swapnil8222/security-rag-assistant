@@ -1,5 +1,4 @@
 import { Document } from "@langchain/core/documents";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 /**
  * A structure-aware splitter for C / C++ source files (.c, .h, .cpp, .hpp).
@@ -25,9 +24,10 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
  *      most `chunkSize` characters. Functions and structs are never split when
  *      they fit.
  *   3. Only when a single unit is larger than `chunkSize` (very long functions)
- *      does it fall back to a C-aware recursive split that prefers statement
- *      boundaries, and each sub-chunk is prefixed with the enclosing function's
- *      signature so the LLM always knows which function it is looking at.
+ *      is it split, and only between whole lines, preferring blank lines and
+ *      the end of a block or statement. Each continuation chunk is prefixed with
+ *      the enclosing function's signature so the LLM always knows which
+ *      function it is looking at, and line numbers stay exact.
  *
  * Output documents carry `metadata.loc.lines.{from,to}` (same shape as
  * LangChain's splitters) plus `symbols` (comma-separated function/type names).
@@ -45,25 +45,6 @@ interface CodeUnit {
   symbols: string[];
   signature: string | null;
 }
-
-/** Separators used only for oversize units (e.g. a 600-line function). */
-const C_FALLBACK_SEPARATORS = [
-  "\n\n",                 // blank lines between logical blocks
-  "\n    /* ",            // block comments at function-body level (Nginx: 4-space indent)
-  "\n    if (",
-  "\n    for (",
-  "\n    while (",
-  "\n    switch (",
-  "\n    case ",
-  "\n    return ",
-  "\n        if (",
-  "\n        for (",
-  "\n        while (",
-  ";\n",                  // end of any statement
-  "\n",
-  " ",
-  "",
-];
 
 const NON_FUNCTION_KEYWORDS = new Set([
   "if", "for", "while", "switch", "return", "sizeof", "defined", "do", "else",
@@ -338,37 +319,67 @@ export default class CCodeSplitter {
     const header = unit.signature
       ? `/* [continued] ${unit.signature} */\n`
       : "";
+    const budget = Math.max(200, this.chunkSize - header.length);
 
-    const splitter = new RecursiveCharacterTextSplitter({
-      chunkSize: Math.max(200, this.chunkSize - header.length),
-      chunkOverlap: this.chunkOverlap,
-      separators: C_FALLBACK_SEPARATORS,
-      keepSeparator: true,
+    // Lines longer than the budget (rare: huge string tables) are hard-wrapped
+    // so that every piece fits. `lineNo` keeps the original line number.
+    const lines: { text: string; lineNo: number }[] = [];
+    unit.text.split("\n").forEach((text, i) => {
+      for (let p = 0; p < Math.max(1, text.length); p += budget) {
+        lines.push({ text: text.slice(p, p + budget), lineNo: unit.fromLine + i });
+      }
     });
 
-    const parts = await splitter.splitText(unit.text);
-
     const result: CodeUnit[] = [];
-    let searchFrom = 0;
+    let start = 0;
 
-    parts.forEach((part, idx) => {
-      // Locate the part in the unit to compute accurate line numbers.
-      let pos = unit.text.indexOf(part, searchFrom);
-      if (pos < 0) pos = unit.text.indexOf(part);
-      if (pos < 0) pos = searchFrom;
-      searchFrom = pos + 1;
+    while (start < lines.length) {
+      // 1) take as many whole lines as fit in the budget
+      let end = start;
+      let size = lines[start].text.length;
+      while (end + 1 < lines.length && size + 1 + lines[end + 1].text.length <= budget) {
+        end++;
+        size += 1 + lines[end].text.length;
+      }
 
-      const linesBefore = unit.text.slice(0, pos).split("\n").length - 1;
-      const partLines = part.split("\n").length;
+      // 2) if more lines follow, move the cut back to a natural boundary in
+      //    the second half of the window: before a blank line, then after a
+      //    closing brace, then after a statement.
+      if (end + 1 < lines.length) {
+        const minCut = start + Math.floor((end - start) / 2);
+        const isBlank = (i: number) => i < lines.length && lines[i].text.trim() === "";
+        const endsWith = (i: number, re: RegExp) => re.test(lines[i].text.trimEnd());
+        const pick = (ok: (i: number) => boolean) => {
+          for (let i = end; i >= minCut; i--) if (ok(i)) return i;
+          return -1;
+        };
+        let cut = pick((i) => isBlank(i + 1));
+        if (cut < 0) cut = pick((i) => endsWith(i, /}$/));
+        if (cut < 0) cut = pick((i) => endsWith(i, /[;{]$/));
+        if (cut >= start) end = cut;
+      }
 
+      const text = lines.slice(start, end + 1).map((l) => l.text).join("\n");
       result.push({
-        text: idx === 0 ? part : header + part,
-        fromLine: unit.fromLine + linesBefore,
-        toLine: unit.fromLine + linesBefore + partLines - 1,
+        text: result.length === 0 ? text : header + text,
+        fromLine: lines[start].lineNo,
+        toLine: lines[end].lineNo,
         symbols: [...unit.symbols],
         signature: unit.signature,
       });
-    });
+
+      if (end + 1 >= lines.length) break;
+
+      // 3) next chunk starts a few lines back (up to chunkOverlap characters)
+      //    but always moves forward
+      let next = end + 1;
+      let overlap = 0;
+      while (next - 1 > start + 1 && overlap + lines[next - 1].text.length + 1 <= this.chunkOverlap) {
+        next--;
+        overlap += lines[next].text.length + 1;
+      }
+      start = next;
+    }
 
     return result;
   }

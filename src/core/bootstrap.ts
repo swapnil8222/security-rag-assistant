@@ -58,7 +58,10 @@ async function initServices() {
         // Larger context window so several C chunks fit in one RAG prompt
         numCtx: process.env.LLM_NUM_CTX ? Number(process.env.LLM_NUM_CTX) : undefined,
         // Low temperature: auditing answers should be precise, not creative
-        temperature: process.env.LLM_TEMPERATURE ? Number(process.env.LLM_TEMPERATURE) : undefined
+        temperature: process.env.LLM_TEMPERATURE ? Number(process.env.LLM_TEMPERATURE) : undefined,
+        // Maximum tokens per answer/summary, and a penalty that discourages loops
+        numPredict: process.env.LLM_NUM_PREDICT ? Number(process.env.LLM_NUM_PREDICT) : undefined,
+        repeatPenalty: process.env.LLM_REPEAT_PENALTY ? Number(process.env.LLM_REPEAT_PENALTY) : undefined
       }
     );
 

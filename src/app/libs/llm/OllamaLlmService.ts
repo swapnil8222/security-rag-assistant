@@ -13,6 +13,8 @@ type LlmSetting = {
   defaultEmbedding: string
   numCtx?: number
   temperature?: number
+  numPredict?: number
+  repeatPenalty?: number
 }
 
 export default class OllamaLlmService implements LlmServiceInterface {
@@ -52,7 +54,11 @@ export default class OllamaLlmService implements LlmServiceInterface {
       model,
       baseUrl: `http://${this.llmSetting.host}:${this.llmSetting.port}`,
       ...(this.llmSetting.numCtx && { numCtx: this.llmSetting.numCtx }),
-      ...(this.llmSetting.temperature !== undefined && { temperature: this.llmSetting.temperature })
+      ...(this.llmSetting.temperature !== undefined && { temperature: this.llmSetting.temperature }),
+      // Cap the output length: small models can fall into a repetition loop
+      // and write tens of thousands of characters for one chunk.
+      ...(this.llmSetting.numPredict && { numPredict: this.llmSetting.numPredict }),
+      ...(this.llmSetting.repeatPenalty && { repeatPenalty: this.llmSetting.repeatPenalty })
     });
 
     return this.llmInstances[model];

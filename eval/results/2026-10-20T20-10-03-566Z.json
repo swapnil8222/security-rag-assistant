@@ -1,0 +1,1487 @@
+{
+  "settings": {
+    "k": 6,
+    "codebase": null,
+    "refine": false,
+    "llmModel": "qwen2.5-coder:1.5b",
+    "refineModel": "qwen2.5-coder:1.5b",
+    "embeddingModel": "snowflake-arctic-embed2:568m",
+    "collection": "nginx-audit-1p5b",
+    "chunkSizeC": "3000"
+  },
+  "totals": {
+    "vector": {
+      "hits": 10,
+      "recall": 9.5
+    },
+    "hybrid": {
+      "hits": 10,
+      "recall": 9.5
+    }
+  },
+  "rows": [
+    {
+      "id": "cve-is-args-stale",
+      "vector hit": "yes",
+      "vector recall": "0.50",
+      "vector:detail": {
+        "searchQuery": "In the rewrite module, after a rewrite whose replacement string contains a question mark, is any engine flag left set that changes how later regex captures are escaped?",
+        "found": [
+          "ngx_http_script_regex_end_code",
+          "ngx_http_script_regex_start_code"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 3307,
+            "toLine": 3428,
+            "symbols": "ngx_http_proxy_rewrite_complex_handler, ngx_http_proxy_rewrite_regex_handler, ngx_http_proxy_rewrite_domain_handler, ngx_http_proxy_rewrite",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1192,
+            "toLine": 1296,
+            "symbols": "ngx_http_script_regex_end_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1036,
+            "toLine": 1144,
+            "symbols": "ngx_http_script_regex_start_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 4860,
+            "toLine": 4956,
+            "symbols": "ngx_http_proxy_rewrite_regex, ngx_http_proxy_store",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1,
+            "toLine": 86,
+            "symbols": "NGX_HTTP_PROXY_COOKIE_SECURE, NGX_HTTP_PROXY_COOKIE_SECURE_ON, NGX_HTTP_PROXY_COOKIE_SECURE_OFF, NGX_HTTP_PROXY_COOKIE_HTTPONLY, NGX_HTTP_PROXY_COOKIE_HTTPONLY_ON, NGX_HTTP_PROXY_COOKIE_HTTPONLY_OFF, NGX_HTTP_PROXY_COOKIE_SAMESITE, NGX_HTTP_PROXY_COOKIE_SAMESITE_STRICT, NGX_HTTP_PROXY_COOKIE_SAMESITE_LAX, NGX_HTTP_PROXY_COOKIE_SAMESITE_NONE, NGX_HTTP_PROXY_COOKIE_SAMESITE_OFF, struct ngx_http_proxy_rewrite_s, ngx_http_proxy_rewrite_t, ngx_http_proxy_rewrite_pt, ngx_http_proxy_cookie_flags_t",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 4648,
+            "toLine": 4739,
+            "symbols": "ngx_http_proxy_cookie_path",
+            "isSummary": true
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "0.50",
+      "hybrid:detail": {
+        "searchQuery": "In the rewrite module, after a rewrite whose replacement string contains a question mark, is any engine flag left set that changes how later regex captures are escaped?",
+        "found": [
+          "ngx_http_script_regex_end_code",
+          "ngx_http_script_regex_start_code"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 3307,
+            "toLine": 3428,
+            "symbols": "ngx_http_proxy_rewrite_complex_handler, ngx_http_proxy_rewrite_regex_handler, ngx_http_proxy_rewrite_domain_handler, ngx_http_proxy_rewrite",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1192,
+            "toLine": 1296,
+            "symbols": "ngx_http_script_regex_end_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1036,
+            "toLine": 1144,
+            "symbols": "ngx_http_script_regex_start_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 4860,
+            "toLine": 4956,
+            "symbols": "ngx_http_proxy_rewrite_regex, ngx_http_proxy_store",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1,
+            "toLine": 86,
+            "symbols": "NGX_HTTP_PROXY_COOKIE_SECURE, NGX_HTTP_PROXY_COOKIE_SECURE_ON, NGX_HTTP_PROXY_COOKIE_SECURE_OFF, NGX_HTTP_PROXY_COOKIE_HTTPONLY, NGX_HTTP_PROXY_COOKIE_HTTPONLY_ON, NGX_HTTP_PROXY_COOKIE_HTTPONLY_OFF, NGX_HTTP_PROXY_COOKIE_SAMESITE, NGX_HTTP_PROXY_COOKIE_SAMESITE_STRICT, NGX_HTTP_PROXY_COOKIE_SAMESITE_LAX, NGX_HTTP_PROXY_COOKIE_SAMESITE_NONE, NGX_HTTP_PROXY_COOKIE_SAMESITE_OFF, struct ngx_http_proxy_rewrite_s, ngx_http_proxy_rewrite_t, ngx_http_proxy_rewrite_pt, ngx_http_proxy_cookie_flags_t",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 4648,
+            "toLine": 4739,
+            "symbols": "ngx_http_proxy_cookie_path",
+            "isSummary": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "cve-complex-value-alloc",
+      "vector hit": "no",
+      "vector recall": "0.00",
+      "vector:detail": {
+        "searchQuery": "Where is the buffer for a complex value used by the set and if directives sized and allocated before captures are copied into it?",
+        "found": [],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1,
+            "toLine": 104,
+            "symbols": "ngx_http_script_exit, ngx_http_script_flush_complex_value, ngx_http_complex_value",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 136,
+            "toLine": 239,
+            "symbols": "ngx_http_compile_complex_value",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 136,
+            "toLine": 239,
+            "symbols": "ngx_http_compile_complex_value",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 240,
+            "toLine": 370,
+            "symbols": "ngx_http_set_complex_value_slot, ngx_http_set_complex_value_zero_slot, ngx_http_set_complex_value_size_slot, ngx_http_test_predicates",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1124,
+            "toLine": 1167,
+            "symbols": "ngx_http_charset_get_buffer",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "no",
+      "hybrid recall": "0.00",
+      "hybrid:detail": {
+        "searchQuery": "Where is the buffer for a complex value used by the set and if directives sized and allocated before captures are copied into it?",
+        "found": [],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1,
+            "toLine": 104,
+            "symbols": "ngx_http_script_exit, ngx_http_script_flush_complex_value, ngx_http_complex_value",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 136,
+            "toLine": 239,
+            "symbols": "ngx_http_compile_complex_value",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 136,
+            "toLine": 239,
+            "symbols": "ngx_http_compile_complex_value",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 240,
+            "toLine": 370,
+            "symbols": "ngx_http_set_complex_value_slot, ngx_http_set_complex_value_zero_slot, ngx_http_set_complex_value_size_slot, ngx_http_test_predicates",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1124,
+            "toLine": 1167,
+            "symbols": "ngx_http_charset_get_buffer",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cve-capture-copy",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How are regex capture values copied into the output buffer, and when are they URI-escaped?",
+        "found": [
+          "ngx_http_script_copy_capture_code",
+          "ngx_http_script_copy_capture_len_code"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1625,
+            "toLine": 1699,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1192,
+            "toLine": 1296,
+            "symbols": "ngx_http_script_regex_end_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1877,
+            "toLine": 2007,
+            "symbols": "ngx_http_parse_unsafe_uri, ngx_http_parse_multi_header_lines",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1492,
+            "toLine": 1564,
+            "symbols": "ngx_escape_uri",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1297,
+            "toLine": 1409,
+            "symbols": "ngx_http_script_add_capture_code, ngx_http_script_copy_capture_len_code, ngx_http_script_copy_capture_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1283,
+            "toLine": 1404,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How are regex capture values copied into the output buffer, and when are they URI-escaped?",
+        "found": [
+          "ngx_http_script_copy_capture_code",
+          "ngx_http_script_copy_capture_len_code"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1625,
+            "toLine": 1699,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1192,
+            "toLine": 1296,
+            "symbols": "ngx_http_script_regex_end_code",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1877,
+            "toLine": 2007,
+            "symbols": "ngx_http_parse_unsafe_uri, ngx_http_parse_multi_header_lines",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1492,
+            "toLine": 1564,
+            "symbols": "ngx_escape_uri",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1297,
+            "toLine": 1409,
+            "symbols": "ngx_http_script_add_capture_code, ngx_http_script_copy_capture_len_code, ngx_http_script_copy_capture_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1283,
+            "toLine": 1404,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "cve-capture-copy-by-name",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "What does ngx_http_script_copy_capture_code do when e->is_args is set?",
+        "found": [
+          "ngx_http_script_copy_capture_code"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1297,
+            "toLine": 1409,
+            "symbols": "ngx_http_script_add_capture_code, ngx_http_script_copy_capture_len_code, ngx_http_script_copy_capture_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 931,
+            "toLine": 1035,
+            "symbols": "ngx_http_script_copy_var_len_code, ngx_http_script_copy_var_code, ngx_http_script_add_args_code, ngx_http_script_mark_args_code, ngx_http_script_start_args_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 850,
+            "toLine": 930,
+            "symbols": "ngx_http_script_copy_len_code, ngx_http_script_copy_code, ngx_http_script_add_var_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1701,
+            "toLine": 1748,
+            "symbols": "ngx_http_script_file_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1523,
+            "toLine": 1607,
+            "symbols": "ngx_http_script_if_code, ngx_http_script_equal_code, ngx_http_script_not_equal_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1864,
+            "toLine": 1901,
+            "symbols": "ngx_http_script_var_code, ngx_http_script_nop_code",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "What does ngx_http_script_copy_capture_code do when e->is_args is set?",
+        "found": [
+          "ngx_http_script_copy_capture_code"
+        ],
+        "sources": [
+          {
+            "via": "symbol",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1297,
+            "toLine": 1409,
+            "symbols": "ngx_http_script_add_capture_code, ngx_http_script_copy_capture_len_code, ngx_http_script_copy_capture_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 931,
+            "toLine": 1035,
+            "symbols": "ngx_http_script_copy_var_len_code, ngx_http_script_copy_var_code, ngx_http_script_add_args_code, ngx_http_script_mark_args_code, ngx_http_script_start_args_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 850,
+            "toLine": 930,
+            "symbols": "ngx_http_script_copy_len_code, ngx_http_script_copy_code, ngx_http_script_add_var_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1701,
+            "toLine": 1748,
+            "symbols": "ngx_http_script_file_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1523,
+            "toLine": 1607,
+            "symbols": "ngx_http_script_if_code, ngx_http_script_equal_code, ngx_http_script_not_equal_code",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_script.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1864,
+            "toLine": 1901,
+            "symbols": "ngx_http_script_var_code, ngx_http_script_nop_code",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "request-body",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How does nginx read the client request body into its buffer?",
+        "found": [
+          "ngx_http_do_read_client_request_body",
+          "ngx_http_read_client_request_body"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 292,
+            "toLine": 384,
+            "symbols": "ngx_http_do_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 378,
+            "toLine": 462,
+            "symbols": "ngx_http_do_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 135,
+            "toLine": 228,
+            "symbols": "ngx_http_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 29,
+            "toLine": 140,
+            "symbols": "ngx_http_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 229,
+            "toLine": 291,
+            "symbols": "ngx_http_read_unbuffered_request_body, ngx_http_read_client_request_body_handler",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 545,
+            "toLine": 626,
+            "symbols": "ngx_http_write_request_body",
+            "isSummary": true
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How does nginx read the client request body into its buffer?",
+        "found": [
+          "ngx_http_do_read_client_request_body",
+          "ngx_http_read_client_request_body"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 292,
+            "toLine": 384,
+            "symbols": "ngx_http_do_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 378,
+            "toLine": 462,
+            "symbols": "ngx_http_do_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 135,
+            "toLine": 228,
+            "symbols": "ngx_http_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 29,
+            "toLine": 140,
+            "symbols": "ngx_http_read_client_request_body",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 229,
+            "toLine": 291,
+            "symbols": "ngx_http_read_unbuffered_request_body, ngx_http_read_client_request_body_handler",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 545,
+            "toLine": 626,
+            "symbols": "ngx_http_write_request_body",
+            "isSummary": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "chunked",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How is chunked transfer encoding parsed, and how is the chunk size checked for overflow?",
+        "found": [
+          "ngx_http_parse_chunked"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2198,
+            "toLine": 2304,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2397,
+            "toLine": 2470,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2296,
+            "toLine": 2411,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 842,
+            "toLine": 934,
+            "symbols": "ngx_http_discard_request_body_filter",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1164,
+            "toLine": 1260,
+            "symbols": "ngx_http_request_body_chunked_filter",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1085,
+            "toLine": 1168,
+            "symbols": "ngx_http_request_body_chunked_filter",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How is chunked transfer encoding parsed, and how is the chunk size checked for overflow?",
+        "found": [
+          "ngx_http_parse_chunked"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2198,
+            "toLine": 2304,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2397,
+            "toLine": 2470,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2296,
+            "toLine": 2411,
+            "symbols": "ngx_http_parse_chunked",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 842,
+            "toLine": 934,
+            "symbols": "ngx_http_discard_request_body_filter",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1164,
+            "toLine": 1260,
+            "symbols": "ngx_http_request_body_chunked_filter",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_request_body.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1085,
+            "toLine": 1168,
+            "symbols": "ngx_http_request_body_chunked_filter",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "header-parse",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "Where are HTTP request header lines parsed?",
+        "found": [
+          "ngx_http_parse_header_line"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 854,
+            "toLine": 957,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 755,
+            "toLine": 853,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 951,
+            "toLine": 1054,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1049,
+            "toLine": 1131,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 103,
+            "toLine": 206,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 289,
+            "toLine": 399,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "Where are HTTP request header lines parsed?",
+        "found": [
+          "ngx_http_parse_header_line"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 854,
+            "toLine": 957,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 755,
+            "toLine": 853,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 951,
+            "toLine": 1054,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1049,
+            "toLine": 1131,
+            "symbols": "ngx_http_parse_header_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 103,
+            "toLine": 206,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 289,
+            "toLine": 399,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "charset-utf8",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How does the charset filter convert UTF-8 to another charset when a multi-byte character is split across buffers?",
+        "found": [
+          "ngx_http_charset_recode_from_utf8"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 930,
+            "toLine": 962,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 802,
+            "toLine": 940,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 682,
+            "toLine": 811,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 544,
+            "toLine": 681,
+            "symbols": "ngx_http_charset_body_filter, ngx_http_charset_recode",
+            "isSummary": true
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How does the charset filter convert UTF-8 to another charset when a multi-byte character is split across buffers?",
+        "found": [
+          "ngx_http_charset_recode_from_utf8"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 930,
+            "toLine": 962,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 802,
+            "toLine": 940,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 682,
+            "toLine": 811,
+            "symbols": "ngx_http_charset_recode_from_utf8",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 963,
+            "toLine": 1123,
+            "symbols": "ngx_http_charset_recode_to_utf8, ngx_http_charset_get_buf",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_charset_filter_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 544,
+            "toLine": 681,
+            "symbols": "ngx_http_charset_body_filter, ngx_http_charset_recode",
+            "isSummary": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "upstream-status",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How is the status line of a proxied upstream response parsed?",
+        "found": [
+          "ngx_http_proxy_process_status_line",
+          "ngx_http_parse_status_line"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1737,
+            "toLine": 1822,
+            "symbols": "ngx_http_proxy_process_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1778,
+            "toLine": 1876,
+            "symbols": "ngx_http_parse_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1659,
+            "toLine": 1784,
+            "symbols": "ngx_http_parse_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1737,
+            "toLine": 1822,
+            "symbols": "ngx_http_proxy_process_status_line",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2140,
+            "toLine": 2257,
+            "symbols": "ngx_http_proxy_chunked_filter",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2402,
+            "toLine": 2514,
+            "symbols": "ngx_http_proxy_non_buffered_chunked_filter",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How is the status line of a proxied upstream response parsed?",
+        "found": [
+          "ngx_http_proxy_process_status_line",
+          "ngx_http_parse_status_line"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1737,
+            "toLine": 1822,
+            "symbols": "ngx_http_proxy_process_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1778,
+            "toLine": 1876,
+            "symbols": "ngx_http_parse_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1659,
+            "toLine": 1784,
+            "symbols": "ngx_http_parse_status_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1737,
+            "toLine": 1822,
+            "symbols": "ngx_http_proxy_process_status_line",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2140,
+            "toLine": 2257,
+            "symbols": "ngx_http_proxy_chunked_filter",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\modules\\ngx_http_proxy_module.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 2402,
+            "toLine": 2514,
+            "symbols": "ngx_http_proxy_non_buffered_chunked_filter",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "escape-uri-by-name",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How does ngx_escape_uri decide which characters to escape?",
+        "found": [
+          "ngx_escape_uri"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1625,
+            "toLine": 1699,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1492,
+            "toLine": 1564,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1830,
+            "toLine": 1901,
+            "symbols": "ngx_escape_html",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1283,
+            "toLine": 1404,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1700,
+            "toLine": 1829,
+            "symbols": "ngx_unescape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1877,
+            "toLine": 2007,
+            "symbols": "ngx_http_parse_unsafe_uri, ngx_http_parse_multi_header_lines",
+            "isSummary": false
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How does ngx_escape_uri decide which characters to escape?",
+        "found": [
+          "ngx_escape_uri"
+        ],
+        "sources": [
+          {
+            "via": "symbol",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1492,
+            "toLine": 1564,
+            "symbols": "ngx_escape_uri",
+            "isSummary": false
+          },
+          {
+            "via": "symbol",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1562,
+            "toLine": 1627,
+            "symbols": "ngx_escape_uri",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1625,
+            "toLine": 1699,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1492,
+            "toLine": 1564,
+            "symbols": "ngx_escape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1830,
+            "toLine": 1901,
+            "symbols": "ngx_escape_html",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1283,
+            "toLine": 1404,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": false
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\core\\ngx_string.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1700,
+            "toLine": 1829,
+            "symbols": "ngx_unescape_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1877,
+            "toLine": 2007,
+            "symbols": "ngx_http_parse_unsafe_uri, ngx_http_parse_multi_header_lines",
+            "isSummary": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "complex-uri",
+      "vector hit": "yes",
+      "vector recall": "1.00",
+      "vector:detail": {
+        "searchQuery": "How is a request URI containing dot segments and percent-encoded characters normalized?",
+        "found": [
+          "ngx_http_parse_complex_uri"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 475,
+            "toLine": 573,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1207,
+            "toLine": 1282,
+            "symbols": "ngx_http_parse_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1587,
+            "toLine": 1658,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1486,
+            "toLine": 1595,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 566,
+            "toLine": 662,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1398,
+            "toLine": 1492,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          }
+        ]
+      },
+      "hybrid hit": "yes",
+      "hybrid recall": "1.00",
+      "hybrid:detail": {
+        "searchQuery": "How is a request URI containing dot segments and percent-encoded characters normalized?",
+        "found": [
+          "ngx_http_parse_complex_uri"
+        ],
+        "sources": [
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 475,
+            "toLine": 573,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1207,
+            "toLine": 1282,
+            "symbols": "ngx_http_parse_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1587,
+            "toLine": 1658,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1486,
+            "toLine": 1595,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 566,
+            "toLine": 662,
+            "symbols": "ngx_http_parse_request_line",
+            "isSummary": true
+          },
+          {
+            "via": "vector",
+            "filename": "source-code\\nginx-1.30.0\\src\\http\\ngx_http_parse.c",
+            "codebase": "nginx-1.30.0",
+            "fromLine": 1398,
+            "toLine": 1492,
+            "symbols": "ngx_http_parse_complex_uri",
+            "isSummary": true
+          }
+        ]
+      }
+    }
+  ]
+}

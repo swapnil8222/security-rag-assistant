@@ -1,0 +1,60 @@
+{
+  "description": "Retrieval test set for the Nginx source tree (release-1.30.0 / 1.30.1). Each question lists the functions a correct retrieval should return. A question counts as a hit when at least one expected function is in the retrieved chunks; recall is the share of expected functions retrieved.",
+  "questions": [
+    {
+      "id": "cve-is-args-stale",
+      "query": "In the rewrite module, after a rewrite whose replacement string contains a question mark, is any engine flag left set that changes how later regex captures are escaped?",
+      "expected": ["ngx_http_script_regex_end_code", "ngx_http_script_start_args_code", "ngx_http_script_mark_args_code", "ngx_http_script_regex_start_code"]
+    },
+    {
+      "id": "cve-complex-value-alloc",
+      "query": "Where is the buffer for a complex value used by the set and if directives sized and allocated before captures are copied into it?",
+      "expected": ["ngx_http_script_complex_value_code"]
+    },
+    {
+      "id": "cve-capture-copy",
+      "query": "How are regex capture values copied into the output buffer, and when are they URI-escaped?",
+      "expected": ["ngx_http_script_copy_capture_code", "ngx_http_script_copy_capture_len_code"]
+    },
+    {
+      "id": "cve-capture-copy-by-name",
+      "query": "What does ngx_http_script_copy_capture_code do when e->is_args is set?",
+      "expected": ["ngx_http_script_copy_capture_code"]
+    },
+    {
+      "id": "request-body",
+      "query": "How does nginx read the client request body into its buffer?",
+      "expected": ["ngx_http_do_read_client_request_body", "ngx_http_read_client_request_body"]
+    },
+    {
+      "id": "chunked",
+      "query": "How is chunked transfer encoding parsed, and how is the chunk size checked for overflow?",
+      "expected": ["ngx_http_parse_chunked"]
+    },
+    {
+      "id": "header-parse",
+      "query": "Where are HTTP request header lines parsed?",
+      "expected": ["ngx_http_parse_header_line"]
+    },
+    {
+      "id": "charset-utf8",
+      "query": "How does the charset filter convert UTF-8 to another charset when a multi-byte character is split across buffers?",
+      "expected": ["ngx_http_charset_recode_from_utf8"]
+    },
+    {
+      "id": "upstream-status",
+      "query": "How is the status line of a proxied upstream response parsed?",
+      "expected": ["ngx_http_proxy_process_status_line", "ngx_http_parse_status_line"]
+    },
+    {
+      "id": "escape-uri-by-name",
+      "query": "How does ngx_escape_uri decide which characters to escape?",
+      "expected": ["ngx_escape_uri"]
+    },
+    {
+      "id": "complex-uri",
+      "query": "How is a request URI containing dot segments and percent-encoded characters normalized?",
+      "expected": ["ngx_http_parse_complex_uri"]
+    }
+  ]
+}
