@@ -110,7 +110,7 @@ Run with `npm run chunk-stats -- source-code/nginx-1.30.0/src` (chunk size 3000 
 
 Other checks on the same tree: every non-blank line is in at least one chunk, no chunk exceeds the limit, and every chunk's text is exactly the source lines `fromLine`–`toLine` it reports (plus the continuation header).
 
-The same checks also pass on the newer `release-1.31.6` (411 files, 3,217 chunks): every non-blank line covered, every chunk matching its reported lines, and 2,936 of 2,940 functions (99.9%) kept whole.
+The same checks also pass on the newer `release-1.31.6` (411 files, 3,217 chunks): every non-blank line covered, every chunk matching its reported lines, and 2,936 of 2,940 functions (99.9%) kept whole, against 2,216 (75.4%) for the LangChain splitter. Re-checked 2026-11-18.
 
 > Reproduce with `npm run chunk-stats -- source-code/nginx-1.30.0/src`. Both rows use the real `@langchain/textsplitters` package; `CCodeSplitter` has no external dependencies.
 
@@ -287,6 +287,7 @@ Options: `--modes closed`, `--modes rag`, `--only id1,id2`, `--runs N` (repeat t
 | Variable | Default | Purpose |
 |---|---|---|
 | `LLM_MODEL` | `qwen3:1.7b` | Chat model for summaries and answers (7B+ code model recommended) |
+| `LLM_SUMMARY_MODEL` | (unset) | Optional smaller model for the per-chunk summaries at indexing time; unset means `LLM_MODEL` |
 | `LLM_MODEL_REFINE_QUERY` | `qwen3:1.7b` | Model that rewrites questions into search queries |
 | `LLM_EMBEDDING_MODEL` | `snowflake-arctic-embed2:568m` | Embedding model |
 | `LLM_NUM_CTX` | `8192` | Ollama context window; must fit several chunks plus their summaries |

@@ -31,7 +31,13 @@ export default class AiAgent {
       template,
     });
 
-    const chain = prompt.pipe(this.llmService.getDefaultLlm());
+    // Summaries are written once per chunk at indexing time, so a smaller,
+    // faster model can be used for them (LLM_SUMMARY_MODEL) while LLM_MODEL
+    // answers the questions. Unset: LLM_MODEL does both.
+    const summaryModel = process.env.LLM_SUMMARY_MODEL?.trim();
+    const chain = prompt.pipe(summaryModel
+      ? this.llmService.getLlm(summaryModel)
+      : this.llmService.getDefaultLlm());
 
     if (contextInfo.trim().length) {
       contextInfo = `Context Information:\n${contextInfo}`;
