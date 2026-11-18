@@ -1,7 +1,7 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { PROMPT_FOR_SUMMARIZING_CODE, PROMPT_FOR_SUMMARIZING_TEXT, PROMPT_FOR_REFINING_PROMPT, PROMPT_USER_QUERY_AND_DATA_CONTEXT } from "#app/settings.js";
 import { RagOptions, RetrievedSource, StdClass } from "../types.js";
-import { extractCIdentifiers, stripThinking } from "../helpers.js";
+import { ContextBlock, contextCharBudget, extractCIdentifiers, packSections, stripThinking, symbolLikePatterns, symbolsInclude } from "../helpers.js";
 import { Op } from "sequelize";
 import Services from "../Services.js";
 import LlmServiceInterface from "./LlmServiceInterface.js";
@@ -31,7 +31,13 @@ export default class AiAgent {
       template,
     });
 
-    const chain = prompt.pipe(this.llmService.getDefaultLlm());
+    // Summaries are written once per chunk at indexing time, so a smaller,
+    // faster model can be used for them (LLM_SUMMARY_MODEL) while LLM_MODEL
+    // answers the questions. Unset: LLM_MODEL does both.
+    const summaryModel = process.env.LLM_SUMMARY_MODEL?.trim();
+    const chain = prompt.pipe(summaryModel
+      ? this.llmService.getLlm(summaryModel)
+      : this.llmService.getDefaultLlm());
 
     if (contextInfo.trim().length) {
       contextInfo = `Context Information:\n${contextInfo}`;
@@ -144,21 +150,27 @@ export default class AiAgent {
     for (const id of identifiers) {
       if (results.length >= maxTotal) break;
 
-      // Match the symbol in the JSON `symbols` field. The code-chunk vs summary
-      // distinction (summaryOf is null) is done in JS below, not in SQL: an
-      // `IS NULL` check on a json_extract expression generates invalid SQL.
+      // Match `id` as a whole entry of the JSON `symbols` field ("a, b, c"),
+      // with LIKE wildcards escaped, so longer names that merely contain `id`
+      // are not returned. There is deliberately no row limit: with a loose
+      // `%id%` pattern and a limit, a common prefix could fill the result
+      // with other functions and push out the chunk that defines `id`.
+      // Summaries carry the same symbols as their chunk; they are dropped in
+      // JS below, because an `IS NULL` check on a json_extract expression
+      // generates invalid SQL.
       const where: StdClass = {
-        'metadata.symbols': { [Op.like]: `%${id}%` },
+        [Op.or]: symbolLikePatterns(id).map((pattern) => ({
+          'metadata.symbols': { [Op.like]: pattern },
+        })),
       };
       if (codebase) {
         where['metadata.codebase'] = codebase;
       }
 
-      const rows: Document[] = await Document.findAll({ where: where as any, limit: 50 });
+      const rows: Document[] = await Document.findAll({ where: where as any });
 
       const exact = rows
-        .filter((row: Document) => !row.metadata?.summaryOf
-          && String(row.metadata?.symbols ?? '').split(/,\s*/).includes(id))
+        .filter((row: Document) => !row.metadata?.summaryOf && symbolsInclude(row.metadata?.symbols, id))
         .sort((a: Document, b: Document) =>
           String(a.filename).localeCompare(String(b.filename))
           || Number(a.metadata?.fromLine ?? 0) - Number(b.metadata?.fromLine ?? 0))
@@ -187,13 +199,30 @@ export default class AiAgent {
   }
 
   /**
+   * Builds the "Context" block of the RAG prompt as text. See buildContext().
+   */
+  async getChunksForFinalQuestionAsText(
+    searchResult: DocumentInterface<Record<string, any>>[],
+    maxChars: number = contextCharBudget()
+  ): Promise<string> {
+    return (await this.buildContext(searchResult, maxChars)).text;
+  }
+
+  /**
    * Builds the "Context" block of the RAG prompt. Each retrieved chunk is
    * paired with its summary and prefixed with a header (file, line range,
    * functions) so the auditor LLM can cite exact locations.
+   *
+   * The block is kept within `maxChars` (by default derived from
+   * LLM_NUM_CTX). Without this limit a long context overflows the model's
+   * window and Ollama silently drops the *start* of the prompt, which is
+   * where the best-ranked chunks (the exact symbol hits) are. Sections are
+   * added in rank order and the lowest-ranked ones are dropped instead.
    */
-  async getChunksForFinalQuestionAsText(
-    searchResult: DocumentInterface<Record<string, any>>[]
-  ): Promise<string> {
+  async buildContext(
+    searchResult: DocumentInterface<Record<string, any>>[],
+    maxChars: number = contextCharBudget()
+  ): Promise<ContextBlock> {
     const processed: string[] = [];
     const sections: string[] = [];
 
@@ -238,7 +267,11 @@ export default class AiAgent {
       ].filter(Boolean).join('\n'));
     }
 
-    return sections.join('\n\n');
+    const packed = packSections(sections, maxChars);
+    if (packed.dropped > 0) {
+      console.warn(`[context] ${packed.dropped} of ${sections.length} retrieved sections dropped to stay within ${maxChars} characters (LLM_NUM_CTX=${process.env.LLM_NUM_CTX ?? 'unset'}).`);
+    }
+    return packed;
   }
 
   private formatChunkHeader(index: number, meta: Record<string, any>): string {

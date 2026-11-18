@@ -1,0 +1,82 @@
+{
+  "description": "Comprehension test set for CVE-2026-42945. Each question is a yes/no claim with a ground truth checked against the nginx source (release-1.30.0 and release-1.30.1) and, where marked, against measured lab findings (F-n) from the author's M.Tech security assessment of this CVE. Questions marked knownError are claims an LLM assistant got wrong during that assessment (its corrections log). Questions sharing a pair id ask the same thing of the vulnerable and the patched code base; a model that reads the code should get both right, one that guesses tends to give the same answer twice.",
+  "questions": [
+    {
+      "id": "end-resets-is-args-1.30.0",
+      "pair": "end-resets-is-args",
+      "codebase": "nginx-1.30.0",
+      "query": "In nginx 1.30.0, does ngx_http_script_regex_end_code reset e->is_args to 0 before it returns?",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_regex_end_code"],
+      "evidence": "1.30.0 ngx_http_script_regex_end_code resets e->quote but not e->is_args. Adding `e->is_args = 0;` there is the entire 1.30.1 fix (upstream commit 524977e)."
+    },
+    {
+      "id": "end-resets-is-args-1.30.1",
+      "pair": "end-resets-is-args",
+      "codebase": "nginx-1.30.1",
+      "query": "In nginx 1.30.1, does ngx_http_script_regex_end_code reset e->is_args to 0 before it returns?",
+      "answer": "YES",
+      "expectedFunctions": ["ngx_http_script_regex_end_code"],
+      "evidence": "1.30.1 adds `e->is_args = 0;` next to `e->quote = 0;` in ngx_http_script_regex_end_code."
+    },
+    {
+      "id": "fix-in-copy-capture-1.30.1",
+      "codebase": "nginx-1.30.1",
+      "query": "In nginx 1.30.1, was CVE-2026-42945 fixed by adding a bounds check to ngx_http_script_copy_capture_code?",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_copy_capture_code", "ngx_http_script_regex_end_code"],
+      "evidence": "ngx_http_script_copy_capture_code is unchanged between 1.30.0 and 1.30.1; the fix resets is_args in ngx_http_script_regex_end_code so the two passes agree. Tests whether the model reads the code or assumes the usual shape of an overflow patch."
+    },
+    {
+      "id": "length-pass-sees-is-args",
+      "codebase": "nginx-1.30.0",
+      "query": "In nginx 1.30.0, when ngx_http_script_complex_value_code computes the length of a value such as the one in set $x \"$1\", does that length pass see the is_args flag of the main script engine?",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_complex_value_code"],
+      "evidence": "The length pass runs on a local engine `le` cleared with ngx_memzero; only le.quote is copied from e, so le.is_args is 0 and captures are counted unescaped."
+    },
+    {
+      "id": "copy-escapes-captures",
+      "codebase": "nginx-1.30.0",
+      "query": "In nginx 1.30.0, can ngx_http_script_copy_capture_code write a regex capture URI-escaped, so that one input byte becomes three output bytes, when e->is_args is set and the request URI contained a '+' or a percent-encoded character?",
+      "answer": "YES",
+      "expectedFunctions": ["ngx_http_script_copy_capture_code"],
+      "evidence": "If (e->is_args || e->quote) && (quoted_uri || plus_in_uri), the capture is written with ngx_escape_uri(..., NGX_ESCAPE_ARGS), turning '+' into %2B."
+    },
+    {
+      "id": "overflow-is-2n",
+      "codebase": "nginx-1.30.0",
+      "query": "In nginx 1.30.0, if a captured value contains n '+' characters and is copied by a set directive after a rewrite whose replacement contains '?', does the copy write 2n more bytes than the buffer allocated for it?",
+      "answer": "YES",
+      "expectedFunctions": ["ngx_http_script_complex_value_code", "ngx_http_script_copy_capture_code"],
+      "evidence": "Each '+' is counted as 1 byte in the length pass and written as 3 (%2B) in the copy pass, 2 extra bytes each. Measured in the lab as an overrun of exactly 2n bytes: buffer sized n+5, filled with 3n+5 (F-3)."
+    },
+    {
+      "id": "capture-in-replacement-required",
+      "codebase": "nginx-1.30.0",
+      "knownError": true,
+      "query": "In nginx 1.30.0, for a later set $x \"$1\" to overflow, must the preceding rewrite's replacement string itself reference a capture such as $1? Answer YES if a capture in the replacement is required, NO if a '?' in the replacement is enough.",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_start_args_code", "ngx_http_script_complex_value_code"],
+      "evidence": "ngx_http_script_compile adds the args code (ngx_http_script_start_args_code, which sets e->is_args = 1) when it meets '?' in the replacement, whether or not the replacement has variables. Lab: only the '?' is required (F-6). The LLM assistant had claimed a capture was also needed."
+    },
+    {
+      "id": "break-prevents",
+      "codebase": "nginx-1.30.0",
+      "knownError": true,
+      "query": "In nginx 1.30.0, if the rewrite whose replacement contains '?' carries the break flag, can a set $x \"$1\" that follows it in the same location still overflow?",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_break_code", "ngx_http_script_regex_end_code"],
+      "evidence": "break stops the rewrite module's script for that location, so the following set never runs. Lab: two configs differing only in break gave five sanitizer reports and zero (F-9). The LLM assistant had treated any '?' rewrite as sufficient."
+    },
+    {
+      "id": "http-200-means-safe",
+      "codebase": "nginx-1.30.0",
+      "knownError": false,
+      "query": "If an affected nginx 1.30.0 server returns HTTP 200 for a request whose URI contains a long run of '+' characters, does that show the heap buffer was not overrun?",
+      "answer": "NO",
+      "expectedFunctions": ["ngx_http_script_copy_capture_code"],
+      "evidence": "The overrun happens at every length; whether it crashes depends on what lies after the buffer. Lab: on an uninstrumented build an 800-character path overran by 1,600 bytes and still returned HTTP 200 with nothing logged (F-4). This is a reasoning question; the answer is not stated in any single function."
+    }
+  ]
+}

@@ -3,9 +3,35 @@
 All changes made in this fork, compared with the upstream project
 [danielefavi/ai-codebase-assistant](https://github.com/danielefavi/ai-codebase-assistant).
 The changes adapt a general-purpose codebase assistant to auditing C code (Nginx) for
-memory-safety bugs, with CVE-2026-42945 as the case study, as part of M.Tech project research.
+memory-safety bugs, with CVE-2026-42945 as the case study. It is a separate project from, and
+informed by, the author's M.Tech security assessment of that CVE.
 
 Newest first.
+
+---
+
+## Round 3: lookup fix, comprehension experiment (2026-11-18)
+
+### Fixed
+
+| Problem | Effect | Fix | File |
+|---|---|---|---|
+| The retrieved context had no size limit. With k = 8 and 3,000-character chunks plus summaries, the prompt reached ~8,700–10,600 tokens against `LLM_NUM_CTX=8192` | Ollama silently drops the **start** of an over-long prompt, which is where the best-ranked chunks (exact symbol hits) are. Found in the first 7B run: the model said `e->is_args = 0` was absent from a chunk that contained it | The context is packed in rank order within a budget computed from `LLM_NUM_CTX` and `LLM_NUM_PREDICT`; the lowest-ranked chunks are dropped, with a warning. The comprehension results record how many sections each answer received | `AiAgent.ts`, `helpers.ts`, `eval-comprehension.ts` |
+| The exact-identifier lookup used `LIKE '%name%'` with `limit 50`, and dropped summaries and partial matches only after the limit | With a common prefix (e.g. `ngx_http_script_`), other functions and their summaries could fill the 50 rows and push out the chunk that defines the name; `_` also acted as a one-character wildcard | Match the name as a whole entry of the symbols list, with `%` and `_` escaped, and no row limit | `AiAgent.ts`, `helpers.ts` |
+
+### Added
+
+- `npm run eval-comprehension` (`src/scripts/eval-comprehension.ts`, `eval/comprehension.json`): 9 yes/no questions on CVE-2026-42945 with ground truth from the nginx source and lab measurements, asked closed-book and with RAG, on nginx 1.30.0 and 1.30.1. Scores accuracy, the corrections-log questions, vulnerable/patched pairs, and retrieval completeness. Verified end to end with a stub model; not yet run with a real one.
+- `VERDICT_INSTRUCTION` and `PROMPT_CLOSED_BOOK` prompts (`settings.ts`), `parseVerdict` (`helpers.ts`).
+- `test/symbolLookup.test.ts`: lookup patterns checked under MySQL `LIKE` rules, identifier extraction, verdict parsing (`npm test`: 13 tests).
+
+### Results
+
+- First real runs of `npm run eval-comprehension` (qwen2.5-coder:7b, T4 GPU), stored in `eval/comprehension-results/` with a per-answer hand grading. Verdict accuracy: closed 0/27, RAG 5/27 (8k window) and 9/27 (16k window); verdict and reasoning correct: 0/27, 3/27, 3/27. Summary in the README.
+
+### Docs
+
+- README: trigger conditions now give the advisory wording and the measured conditions separately; new Comprehension experiment section.
 
 ---
 
