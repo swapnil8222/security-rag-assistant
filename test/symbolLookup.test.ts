@@ -9,7 +9,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { escapeLike, extractCIdentifiers, parseVerdict, symbolLikePatterns, symbolsInclude } from '../src/app/libs/helpers.js';
+import { contextCharBudget, escapeLike, extractCIdentifiers, packSections, parseVerdict, symbolLikePatterns, symbolsInclude } from '../src/app/libs/helpers.js';
 
 /** MySQL LIKE semantics, default escape character `\`. */
 function likeMatches(value: string, pattern: string): boolean {
@@ -75,4 +75,21 @@ test('parseVerdict reads the first verdict line, with or without markdown', () =
   assert.equal(parseVerdict('VERDICT: UNKNOWN'), 'UNKNOWN');
   assert.equal(parseVerdict('VERDICT: NO ... later VERDICT: YES'), 'NO');
   assert.equal(parseVerdict('The answer is no.'), 'NONE');
+});
+
+test('contextCharBudget leaves room for the prompt and the answer', () => {
+  assert.equal(contextCharBudget(8192, 1500, 0), (8192 - 1500 - 1200) * 3);
+  assert.equal(contextCharBudget(16384, 1500, 0), (16384 - 1500 - 1200) * 3);
+  assert.equal(contextCharBudget(8192, 1500, 5000), 5000);
+});
+
+test('packSections keeps the best-ranked sections and drops the rest', () => {
+  const s = ['a'.repeat(100), 'b'.repeat(100), 'c'.repeat(100)];
+  const r = packSections(s, 205);
+  assert.equal(r.kept, 2);
+  assert.equal(r.dropped, 1);
+  assert.ok(r.text.startsWith('a') && r.text.includes('b') && !r.text.includes('c'));
+  assert.ok(r.chars <= 205);
+  // the first section is kept even if it alone exceeds the budget
+  assert.equal(packSections(['x'.repeat(500)], 100).kept, 1);
 });

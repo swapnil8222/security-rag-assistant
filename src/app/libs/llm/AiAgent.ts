@@ -1,7 +1,7 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { PROMPT_FOR_SUMMARIZING_CODE, PROMPT_FOR_SUMMARIZING_TEXT, PROMPT_FOR_REFINING_PROMPT, PROMPT_USER_QUERY_AND_DATA_CONTEXT } from "#app/settings.js";
 import { RagOptions, RetrievedSource, StdClass } from "../types.js";
-import { extractCIdentifiers, stripThinking, symbolLikePatterns, symbolsInclude } from "../helpers.js";
+import { ContextBlock, contextCharBudget, extractCIdentifiers, packSections, stripThinking, symbolLikePatterns, symbolsInclude } from "../helpers.js";
 import { Op } from "sequelize";
 import Services from "../Services.js";
 import LlmServiceInterface from "./LlmServiceInterface.js";
@@ -199,13 +199,30 @@ export default class AiAgent {
   }
 
   /**
+   * Builds the "Context" block of the RAG prompt as text. See buildContext().
+   */
+  async getChunksForFinalQuestionAsText(
+    searchResult: DocumentInterface<Record<string, any>>[],
+    maxChars: number = contextCharBudget()
+  ): Promise<string> {
+    return (await this.buildContext(searchResult, maxChars)).text;
+  }
+
+  /**
    * Builds the "Context" block of the RAG prompt. Each retrieved chunk is
    * paired with its summary and prefixed with a header (file, line range,
    * functions) so the auditor LLM can cite exact locations.
+   *
+   * The block is kept within `maxChars` (by default derived from
+   * LLM_NUM_CTX). Without this limit a long context overflows the model's
+   * window and Ollama silently drops the *start* of the prompt, which is
+   * where the best-ranked chunks (the exact symbol hits) are. Sections are
+   * added in rank order and the lowest-ranked ones are dropped instead.
    */
-  async getChunksForFinalQuestionAsText(
-    searchResult: DocumentInterface<Record<string, any>>[]
-  ): Promise<string> {
+  async buildContext(
+    searchResult: DocumentInterface<Record<string, any>>[],
+    maxChars: number = contextCharBudget()
+  ): Promise<ContextBlock> {
     const processed: string[] = [];
     const sections: string[] = [];
 
@@ -250,7 +267,11 @@ export default class AiAgent {
       ].filter(Boolean).join('\n'));
     }
 
-    return sections.join('\n\n');
+    const packed = packSections(sections, maxChars);
+    if (packed.dropped > 0) {
+      console.warn(`[context] ${packed.dropped} of ${sections.length} retrieved sections dropped to stay within ${maxChars} characters (LLM_NUM_CTX=${process.env.LLM_NUM_CTX ?? 'unset'}).`);
+    }
+    return packed;
   }
 
   private formatChunkHeader(index: number, meta: Record<string, any>): string {

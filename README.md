@@ -291,6 +291,7 @@ Options: `--modes closed`, `--modes rag`, `--only id1,id2`, `--runs N` (repeat t
 | `LLM_MODEL_REFINE_QUERY` | `qwen3:1.7b` | Model that rewrites questions into search queries |
 | `LLM_EMBEDDING_MODEL` | `snowflake-arctic-embed2:568m` | Embedding model |
 | `LLM_NUM_CTX` | `8192` | Ollama context window; must fit several chunks plus their summaries |
+| `CONTEXT_MAX_CHARS` | computed | Maximum characters of retrieved context; by default `(LLM_NUM_CTX − LLM_NUM_PREDICT − 1200) × 3`, so the prompt always fits the window. Lowest-ranked chunks are dropped first, with a warning |
 | `LLM_TEMPERATURE` | `0.1` | Low temperature for precise, repeatable answers |
 | `VECTOR_DB_COLLECTION_NAME` | `nginx-audit` | Chroma collection; one collection can hold several code bases |
 | `SCAN_EXTENSIONS` | `c,h` | File extensions to index under `source-code/` |

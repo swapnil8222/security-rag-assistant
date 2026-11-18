@@ -16,6 +16,7 @@ Newest first.
 
 | Problem | Effect | Fix | File |
 |---|---|---|---|
+| The retrieved context had no size limit. With k = 8 and 3,000-character chunks plus summaries, the prompt reached ~8,700–10,600 tokens against `LLM_NUM_CTX=8192` | Ollama silently drops the **start** of an over-long prompt, which is where the best-ranked chunks (exact symbol hits) are. Found in the first 7B run: the model said `e->is_args = 0` was absent from a chunk that contained it | The context is packed in rank order within a budget computed from `LLM_NUM_CTX` and `LLM_NUM_PREDICT`; the lowest-ranked chunks are dropped, with a warning. The comprehension results record how many sections each answer received | `AiAgent.ts`, `helpers.ts`, `eval-comprehension.ts` |
 | The exact-identifier lookup used `LIKE '%name%'` with `limit 50`, and dropped summaries and partial matches only after the limit | With a common prefix (e.g. `ngx_http_script_`), other functions and their summaries could fill the 50 rows and push out the chunk that defines the name; `_` also acted as a one-character wildcard | Match the name as a whole entry of the symbols list, with `%` and `_` escaped, and no row limit | `AiAgent.ts`, `helpers.ts` |
 
 ### Added

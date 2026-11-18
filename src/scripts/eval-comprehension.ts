@@ -33,7 +33,7 @@ import { PromptTemplate } from '@langchain/core/prompts';
 import bootstrap from '#core/bootstrap.js';
 import Services from '#app/libs/Services.js';
 import { RagOptions, RetrievedSource } from '#app/libs/types.js';
-import { parseVerdict, stripThinking, Verdict } from '#app/libs/helpers.js';
+import { contextCharBudget, parseVerdict, stripThinking, Verdict } from '#app/libs/helpers.js';
 import { PROMPT_CLOSED_BOOK, VERDICT_INSTRUCTION } from '#app/settings.js';
 
 type Question = {
@@ -58,6 +58,8 @@ type Run = {
   correct: boolean;
   retrievedExpected: string[] | null;   // rag only
   retrievalRecall: number | null;       // rag only
+  contextSections: string | null;       // rag only: "kept/retrieved" sections that fit the window
+  contextChars: number | null;          // rag only
   seconds: number;
   answer: string;
   sources: RetrievedSource[] | null;
@@ -109,6 +111,7 @@ async function ask(q: Question, mode: Mode, run: number): Promise<Run> {
   const query = q.query + VERDICT_INSTRUCTION;
   let answer: string;
   let sources: RetrievedSource[] | null = null;
+  let ctx: { kept: number; dropped: number; chars: number } | null = null;
 
   if (mode === 'closed') {
     answer = String(await closedChain.invoke({ userQuery: query }));
@@ -123,8 +126,9 @@ async function ask(q: Question, mode: Mode, run: number): Promise<Run> {
     // Retrieve with the bare question: the verdict instruction would only add noise to the search.
     const retrieved = await agent.retrieve(q.query, q.query, options);
     sources = retrieved.sources;
-    const context = await agent.getChunksForFinalQuestionAsText(retrieved.searchResult);
-    answer = await agent.getFinalAnswer(query, context, model);
+    const block = await agent.buildContext(retrieved.searchResult);
+    ctx = block;
+    answer = await agent.getFinalAnswer(query, block.text, model);
   }
 
   answer = stripThinking(answer);
@@ -140,6 +144,8 @@ async function ask(q: Question, mode: Mode, run: number): Promise<Run> {
     correct: verdict === q.answer,
     retrievedExpected: found,
     retrievalRecall: found ? found.length / q.expectedFunctions.length : null,
+    contextSections: ctx ? `${ctx.kept}/${ctx.kept + ctx.dropped}` : null,
+    contextChars: ctx ? ctx.chars : null,
     seconds: Number(((Date.now() - started) / 1000).toFixed(1)),
     answer,
     sources,
@@ -202,7 +208,7 @@ for (const mode of modes) {
   summary[mode] = s;
 }
 
-console.log(`\nComprehension experiment: ${questions.length} questions, modes=${modes.join(',')}, runs=${runs}, k=${k}, model=${process.env.LLM_MODEL}\n`);
+console.log(`\nComprehension experiment: ${questions.length} questions, modes=${modes.join(',')}, runs=${runs}, k=${k}, model=${process.env.LLM_MODEL}, LLM_NUM_CTX=${process.env.LLM_NUM_CTX}, context limit=${contextCharBudget()} chars\n`);
 console.table(questions.map((q) => {
   const row: Record<string, string> = { id: q.id, expected: q.answer };
   for (const mode of modes) {
@@ -226,6 +232,8 @@ fs.mkdirSync(outDir, { recursive: true });
 
 const settings = {
   k, runs, modes,
+  contextMaxChars: contextCharBudget(),
+  numCtx: process.env.LLM_NUM_CTX,
   llmModel: process.env.LLM_MODEL,
   embeddingModel: process.env.LLM_EMBEDDING_MODEL,
   numPredict: process.env.LLM_NUM_PREDICT,
@@ -260,7 +268,7 @@ const md = [
       `**Expected:** ${q.answer} — ${q.evidence}`,
       '',
       r.mode === 'rag'
-        ? `**Retrieved expected functions:** ${r.retrievedExpected?.join(', ') || 'none'} (of ${q.expectedFunctions.join(', ')})\n`
+        ? `**Retrieved expected functions:** ${r.retrievedExpected?.join(', ') || 'none'} (of ${q.expectedFunctions.join(', ')}) · **context:** ${r.contextSections} sections, ${r.contextChars} chars\n`
         : '',
       '**Answer:**',
       '',

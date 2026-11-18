@@ -111,3 +111,40 @@ export function parseVerdict(answer: string): Verdict {
   const m = String(answer ?? '').match(/VERDICT\W{0,4}\s*(YES|NO|UNKNOWN)\b/i);
   return m ? (m[1].toUpperCase() as Verdict) : 'NONE';
 }
+
+/**
+ * Characters of retrieved context that fit in the model's window. The window
+ * (LLM_NUM_CTX tokens) must also hold the auditor prompt and question
+ * (about 1,200 tokens) and the answer (LLM_NUM_PREDICT tokens). C code
+ * tokenizes densely, so 3 characters per token is used as a safe estimate.
+ * CONTEXT_MAX_CHARS overrides the computed value.
+ */
+export function contextCharBudget(
+  numCtx: number = Number(process.env.LLM_NUM_CTX) || 8192,
+  numPredict: number = Number(process.env.LLM_NUM_PREDICT) || 512,
+  override: number = Number(process.env.CONTEXT_MAX_CHARS) || 0
+): number {
+  if (override > 0) return override;
+  const promptTokens = 1200;
+  const charsPerToken = 3;
+  return Math.max(2000, (numCtx - numPredict - promptTokens) * charsPerToken);
+}
+
+export type ContextBlock = { text: string; kept: number; dropped: number; chars: number };
+
+/**
+ * Keeps sections, in the order given (best-ranked first), while the joined
+ * text stays within maxChars. The first section is always kept so the best
+ * hit is never lost.
+ */
+export function packSections(sections: string[], maxChars: number, separator: string = '\n\n'): ContextBlock {
+  const kept: string[] = [];
+  let chars = 0;
+  for (const s of sections) {
+    const add = s.length + (kept.length ? separator.length : 0);
+    if (kept.length && chars + add > maxChars) break;
+    kept.push(s);
+    chars += add;
+  }
+  return { text: kept.join(separator), kept: kept.length, dropped: sections.length - kept.length, chars };
+}
