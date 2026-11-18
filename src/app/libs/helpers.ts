@@ -43,6 +43,28 @@ export function extractCIdentifiers(text: string): string[] {
   return [...new Set(ids)].filter((id) => id.length >= 5);
 }
 
+/** Escapes the SQL LIKE wildcards (`%`, `_`) and the escape character itself. */
+export function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
+/**
+ * LIKE patterns that match `id` as a whole entry of a comma-separated
+ * `symbols` list ("a, b, c"): the only entry, the first, the last, or one in
+ * the middle. A plain `%id%` would also match longer names that contain `id`
+ * (e.g. `ngx_http_script_code` inside `ngx_http_script_code_foo`), and `_`
+ * would act as a one-character wildcard.
+ */
+export function symbolLikePatterns(id: string): string[] {
+  const e = escapeLike(id);
+  return [e, `${e},%`, `%, ${e}`, `%, ${e},%`];
+}
+
+/** True if `id` is one of the entries in a comma-separated symbols list. */
+export function symbolsInclude(symbols: unknown, id: string): boolean {
+  return String(symbols ?? '').split(/,\s*/).includes(id);
+}
+
 export function extToLang(ext: string): string | null {
   return EXT_TO_LANG[ext.replace(/^\./, '').toLowerCase()] ?? null;
 }
@@ -76,4 +98,16 @@ export function errorWithCause(message: string, error: any): Error {
       ...(error.cause && { cause: String(error.cause) }),
     }
   });
+}
+
+export type Verdict = 'YES' | 'NO' | 'UNKNOWN' | 'NONE';
+
+/**
+ * Reads the "VERDICT: YES|NO|UNKNOWN" line the comprehension prompts ask for.
+ * Takes the first one (the prompt asks for it on the first line), tolerating
+ * markdown such as **VERDICT:** NO. Returns NONE when the model gave none.
+ */
+export function parseVerdict(answer: string): Verdict {
+  const m = String(answer ?? '').match(/VERDICT\W{0,4}\s*(YES|NO|UNKNOWN)\b/i);
+  return m ? (m[1].toUpperCase() as Verdict) : 'NONE';
 }

@@ -26,7 +26,8 @@ CVE-2026-42945 is a heap buffer overflow in `ngx_http_rewrite_module`, publicly 
 
 - **Affected:** NGINX Open Source 0.6.27 to 1.30.0. **Fixed** in 1.30.1 and 1.31.0.
 - **Severity:** CVSS v4.0 9.2 (F5); CVSS v3.1 8.1 (Red Hat). CWE-131 (incorrect calculation of buffer size).
-- **Trigger:** a `rewrite` whose replacement uses an unnamed PCRE capture (`$1`, …) and contains a `?`, followed in the same scope by another `rewrite`, `if` or `set` that uses captures. A request whose URI contains percent-encoded characters or `+` then overflows a heap buffer in the worker. Impact is a worker crash (DoS); code execution has been described as possible when ASLR is disabled.
+- **Trigger (advisory wording):** a `rewrite` with an unnamed PCRE capture and a `?` in its replacement, followed in the same scope by another `rewrite`, `if` or `set` that uses captures. A request whose URI contains percent-encoded characters or `+` then overflows a heap buffer in the worker. Impact is a worker crash (DoS); code execution has been described as possible when ASLR is disabled.
+- **Trigger (measured):** the author's separate security assessment of this CVE (nginx 1.24.0 built with AddressSanitizer) narrowed the conditions: the rewrite's regex needs a capture, but its *replacement* needs only the `?`; the rewrite must not carry `break` (or another flag that stops the script); and the later directive must read the capture, as in `set $x "$1";`. The overflow is exactly 2 bytes per escapable character (buffer sized n+5, filled with 3n+5), and some overflowing requests still return a clean HTTP 200. These measurements are the ground truth for the [comprehension experiment](#comprehension-experiment).
 
 ### Root cause (from the upstream fix)
 
@@ -203,13 +204,14 @@ Ask the same question with `"codebase": "nginx-1.30.1"` to compare the vulnerabl
 
 ## Evaluation
 
-Two levels of checks, from cheapest to most complete:
+Four levels of checks, from cheapest to most complete:
 
 | Command | Needs | What it checks |
 |---|---|---|
-| `npm test` | nothing | `CCodeSplitter` unit tests: functions kept whole, braces in strings/comments, `#if` branches, length/copy pairs, long-function splitting and exact line numbers |
+| `npm test` | nothing | `CCodeSplitter` unit tests (functions kept whole, braces in strings/comments, `#if` branches, length/copy pairs, long-function splitting, exact line numbers), plus the exact-identifier lookup patterns and verdict parsing |
 | `npm run chunk-stats -- <folder>` | nothing | The chunking benchmark above, on any C tree |
 | `npm run eval` | services and a built index | **Retrieval quality**: for each question in `eval/questions.json`, does retrieval return the functions that answer it? |
+| `npm run eval-comprehension` | services, both code bases indexed | **Answer correctness**: does retrieved code make the model's yes/no answers about CVE-2026-42945 correct, on the vulnerable and the patched code? See [below](#comprehension-experiment). |
 
 `npm run eval` reports, for vector-only and hybrid retrieval, the **hit rate** (at least one expected function retrieved) and **mean recall** (share of expected functions retrieved), and saves the full run to `eval/results/`. Options: `--codebase nginx-1.30.0`, `--k 8`, `--refine`. The test set has 11 questions: four on CVE-2026-42945 and others on request bodies, chunked encoding, header parsing, the charset filter, upstream status lines and URI handling. Add your own questions to the JSON file.
 
@@ -247,7 +249,36 @@ Retrieval is only half of the pipeline. Three questions were run end to end with
 
 The fix is a larger model for both summaries and answers (a 7B+ code model needs roughly 16 GB of RAM or a GPU). Full transcripts: `eval/transcripts/2026-10-20T20-21-46-923Z.md`, `…T20-30-27-720Z.md`, `…T20-36-00-860Z.md`.
 
-Use it to compare settings (chunk size, `k`, embedding model, query rewriting on or off) with numbers instead of impressions.
+Use these tools to compare settings (chunk size, `k`, embedding model, query rewriting on or off) with numbers instead of impressions.
+
+### Comprehension experiment
+
+Three hand-checked transcripts cannot say whether retrieval *helps* the model. This experiment asks it directly, with questions whose answers are known.
+
+**Question.** During the manual assessment of this CVE, an LLM assistant made confident claims that lab measurements later disproved (a capture is needed in the rewrite replacement; any `?` rewrite is enough, even with `break`). Does giving the model the relevant nginx source stop such mistakes, and does it read the code or repeat what a patch usually looks like?
+
+**Method.** `eval/comprehension.json` holds 9 yes/no questions. Each answer was checked against the nginx 1.30.0 / 1.30.1 source and, where marked, the lab findings:
+
+| Group | Questions | What it separates |
+|---|---|---|
+| Mechanism | the length pass runs on a zeroed engine; the copy pass escapes captures; the overrun is 2n | Reading the two-pass logic in the retrieved code |
+| Corrections log (`knownError`) | a capture in the replacement is not required; `break` prevents the overflow | Repeating the earlier model's mistakes, or not |
+| Vulnerable vs patched (`pair`) | does `ngx_http_script_regex_end_code` reset `is_args`? asked of 1.30.0 (no) and 1.30.1 (yes) | Reading the code: a guess gives the same answer twice |
+| Patch shape | was the fix a bounds check in `ngx_http_script_copy_capture_code`? (no) | Assuming the usual shape of an overflow fix |
+| Reasoning | does an HTTP 200 prove no overrun? (no) | Reasoning beyond any single function |
+
+Every question is asked in two modes: **closed** (the model alone, no code) and **rag** (the full pipeline on that question's code base). The model must begin with `VERDICT: YES|NO|UNKNOWN`, so answers are scored without a second "judge" model. For rag runs the script also records whether retrieval returned the functions the answer depends on, which separates retrieval failures from reasoning failures.
+
+**Run it:**
+
+```sh
+# both code bases must be indexed (see Quickstart step 3); answers need room
+LLM_NUM_PREDICT=1500 npm run eval-comprehension -- --k 8 --runs 3
+```
+
+Options: `--modes closed`, `--modes rag`, `--only id1,id2`, `--runs N` (repeat to see how stable answers are). Results go to `eval/comprehension-results/<timestamp>.json` and a transcript `<timestamp>.md`. Check the transcript by hand: a correct verdict with wrong reasoning still counts as a miss when you report results.
+
+**Status.** The script, scoring and retrieval path have been tested end to end against MariaDB and Chroma with a stub model. **It has not yet been run with a real model**, so there are no results to report. The useful comparison is closed vs rag with a 7B+ code model (for example `qwen2.5-coder:7b`).
 
 ---
 
@@ -293,7 +324,7 @@ Compared with [danielefavi/ai-codebase-assistant](https://github.com/danielefavi
 - **Code base labels**: several versions of a project in one index, filterable per question.
 - **Context builder**: each retrieved chunk is shown with its summary and a `file (lines) | functions` header.
 - **Ollama settings**: context window and temperature are configurable.
-- **Evaluation and tests**: `npm test`, `npm run chunk-stats`, `npm run eval`, `npm run ask`.
+- **Evaluation and tests**: `npm test`, `npm run chunk-stats`, `npm run eval`, `npm run ask`, and `npm run eval-comprehension` (closed-book vs RAG answer correctness on CVE-2026-42945, vulnerable vs patched).
 - **Bug fixes in the original pipeline:**
   - Large files were also summarized and embedded **whole**, next to their chunks. A whole file overflows the model's context window, and a whole-file hit put an entire file into the RAG prompt. Now only the chunks are processed.
   - Files that fit in one chunk got no line or symbol metadata.
@@ -328,9 +359,12 @@ src/app/libs/llm/AiAgent.ts                       Retrieval (hybrid), context bu
 src/scripts/scan-docs.ts                          npm run load-docs: indexing
 src/scripts/ask.ts                                npm run ask: one question, saved transcript
 src/scripts/eval-retrieval.ts                     npm run eval: retrieval hit rate and recall
+src/scripts/eval-comprehension.ts                 npm run eval-comprehension: closed vs RAG answer correctness
 src/scripts/chunk-stats.ts                        npm run chunk-stats: chunking benchmark
-test/CCodeSplitter.test.ts                        npm test
+test/CCodeSplitter.test.ts                        npm test: splitter
+test/symbolLookup.test.ts                         npm test: identifier lookup, verdict parsing
 eval/questions.json                               Retrieval test set
+eval/comprehension.json                           Yes/no comprehension test set with ground truth
 ```
 
 ## License

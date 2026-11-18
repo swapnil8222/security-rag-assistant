@@ -15,6 +15,7 @@
     "scan-docs": "tsx src/scripts/scan-docs.ts",
     "ask": "tsx src/scripts/ask.ts",
     "eval": "tsx src/scripts/eval-retrieval.ts",
+    "eval-comprehension": "tsx src/scripts/eval-comprehension.ts",
     "chunk-stats": "tsx src/scripts/chunk-stats.ts",
     "test": "tsx --test test/*.test.ts",
     "reset-failed": "tsx src/scripts/reset-failed.ts"

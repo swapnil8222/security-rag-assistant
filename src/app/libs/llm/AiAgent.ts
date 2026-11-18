@@ -1,7 +1,7 @@
 import { PromptTemplate } from "@langchain/core/prompts";
 import { PROMPT_FOR_SUMMARIZING_CODE, PROMPT_FOR_SUMMARIZING_TEXT, PROMPT_FOR_REFINING_PROMPT, PROMPT_USER_QUERY_AND_DATA_CONTEXT } from "#app/settings.js";
 import { RagOptions, RetrievedSource, StdClass } from "../types.js";
-import { extractCIdentifiers, stripThinking } from "../helpers.js";
+import { extractCIdentifiers, stripThinking, symbolLikePatterns, symbolsInclude } from "../helpers.js";
 import { Op } from "sequelize";
 import Services from "../Services.js";
 import LlmServiceInterface from "./LlmServiceInterface.js";
@@ -144,21 +144,27 @@ export default class AiAgent {
     for (const id of identifiers) {
       if (results.length >= maxTotal) break;
 
-      // Match the symbol in the JSON `symbols` field. The code-chunk vs summary
-      // distinction (summaryOf is null) is done in JS below, not in SQL: an
-      // `IS NULL` check on a json_extract expression generates invalid SQL.
+      // Match `id` as a whole entry of the JSON `symbols` field ("a, b, c"),
+      // with LIKE wildcards escaped, so longer names that merely contain `id`
+      // are not returned. There is deliberately no row limit: with a loose
+      // `%id%` pattern and a limit, a common prefix could fill the result
+      // with other functions and push out the chunk that defines `id`.
+      // Summaries carry the same symbols as their chunk; they are dropped in
+      // JS below, because an `IS NULL` check on a json_extract expression
+      // generates invalid SQL.
       const where: StdClass = {
-        'metadata.symbols': { [Op.like]: `%${id}%` },
+        [Op.or]: symbolLikePatterns(id).map((pattern) => ({
+          'metadata.symbols': { [Op.like]: pattern },
+        })),
       };
       if (codebase) {
         where['metadata.codebase'] = codebase;
       }
 
-      const rows: Document[] = await Document.findAll({ where: where as any, limit: 50 });
+      const rows: Document[] = await Document.findAll({ where: where as any });
 
       const exact = rows
-        .filter((row: Document) => !row.metadata?.summaryOf
-          && String(row.metadata?.symbols ?? '').split(/,\s*/).includes(id))
+        .filter((row: Document) => !row.metadata?.summaryOf && symbolsInclude(row.metadata?.symbols, id))
         .sort((a: Document, b: Document) =>
           String(a.filename).localeCompare(String(b.filename))
           || Number(a.metadata?.fromLine ?? 0) - Number(b.metadata?.fromLine ?? 0))

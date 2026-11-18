@@ -119,3 +119,24 @@ export const PROMPT_USER_QUERY_AND_DATA_CONTEXT: string = `You are a Senior C/C+
 ---
 
 **Your Answer:**`;
+
+
+/**
+ * Comprehension experiment (npm run eval-comprehension): every question is a
+ * yes/no claim, and the model must start with a machine-readable verdict line
+ * so answers can be scored without a judge model. The verdict comes first so
+ * that an answer cut off by LLM_NUM_PREDICT can still be scored.
+ */
+export const VERDICT_INSTRUCTION: string = `
+
+Start your answer with exactly one line: "VERDICT: YES", "VERDICT: NO" or "VERDICT: UNKNOWN" (UNKNOWN only if the question cannot be decided). Then justify it.`;
+
+/** Same auditor role, but no retrieved code: tests what the model knows or reasons on its own. */
+export const PROMPT_CLOSED_BOOK: string = `You are a Senior C/C++ Security Auditor with deep knowledge of the Nginx source code. Answer the question from your own knowledge of Nginx and of C. No source code is provided.
+
+Be precise. If you are not sure, say so rather than guessing details such as function names, line numbers or patch contents.
+
+**User Question:**
+{userQuery}
+
+**Your Answer:**`;

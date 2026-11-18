@@ -3,9 +3,30 @@
 All changes made in this fork, compared with the upstream project
 [danielefavi/ai-codebase-assistant](https://github.com/danielefavi/ai-codebase-assistant).
 The changes adapt a general-purpose codebase assistant to auditing C code (Nginx) for
-memory-safety bugs, with CVE-2026-42945 as the case study, as part of M.Tech project research.
+memory-safety bugs, with CVE-2026-42945 as the case study. It is a separate project from, and
+informed by, the author's M.Tech security assessment of that CVE.
 
 Newest first.
+
+---
+
+## Round 3: lookup fix, comprehension experiment (2026-11-18)
+
+### Fixed
+
+| Problem | Effect | Fix | File |
+|---|---|---|---|
+| The exact-identifier lookup used `LIKE '%name%'` with `limit 50`, and dropped summaries and partial matches only after the limit | With a common prefix (e.g. `ngx_http_script_`), other functions and their summaries could fill the 50 rows and push out the chunk that defines the name; `_` also acted as a one-character wildcard | Match the name as a whole entry of the symbols list, with `%` and `_` escaped, and no row limit | `AiAgent.ts`, `helpers.ts` |
+
+### Added
+
+- `npm run eval-comprehension` (`src/scripts/eval-comprehension.ts`, `eval/comprehension.json`): 9 yes/no questions on CVE-2026-42945 with ground truth from the nginx source and lab measurements, asked closed-book and with RAG, on nginx 1.30.0 and 1.30.1. Scores accuracy, the corrections-log questions, vulnerable/patched pairs, and retrieval completeness. Verified end to end with a stub model; not yet run with a real one.
+- `VERDICT_INSTRUCTION` and `PROMPT_CLOSED_BOOK` prompts (`settings.ts`), `parseVerdict` (`helpers.ts`).
+- `test/symbolLookup.test.ts`: lookup patterns checked under MySQL `LIKE` rules, identifier extraction, verdict parsing (`npm test`: 13 tests).
+
+### Docs
+
+- README: trigger conditions now give the advisory wording and the measured conditions separately; new Comprehension experiment section.
 
 ---
 
