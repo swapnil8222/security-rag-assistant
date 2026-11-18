@@ -25,6 +25,10 @@ Newest first.
 - `VERDICT_INSTRUCTION` and `PROMPT_CLOSED_BOOK` prompts (`settings.ts`), `parseVerdict` (`helpers.ts`).
 - `test/symbolLookup.test.ts`: lookup patterns checked under MySQL `LIKE` rules, identifier extraction, verdict parsing (`npm test`: 13 tests).
 
+### Results
+
+- First real runs of `npm run eval-comprehension` (qwen2.5-coder:7b, T4 GPU), stored in `eval/comprehension-results/` with a per-answer hand grading. Verdict accuracy: closed 0/27, RAG 5/27 (8k window) and 9/27 (16k window); verdict and reasoning correct: 0/27, 3/27, 3/27. Summary in the README.
+
 ### Docs
 
 - README: trigger conditions now give the advisory wording and the measured conditions separately; new Comprehension experiment section.

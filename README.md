@@ -211,7 +211,7 @@ Four levels of checks, from cheapest to most complete:
 | `npm test` | nothing | `CCodeSplitter` unit tests (functions kept whole, braces in strings/comments, `#if` branches, length/copy pairs, long-function splitting, exact line numbers), plus the exact-identifier lookup patterns and verdict parsing |
 | `npm run chunk-stats -- <folder>` | nothing | The chunking benchmark above, on any C tree |
 | `npm run eval` | services and a built index | **Retrieval quality**: for each question in `eval/questions.json`, does retrieval return the functions that answer it? |
-| `npm run eval-comprehension` | services, both code bases indexed | **Answer correctness**: does retrieved code make the model's yes/no answers about CVE-2026-42945 correct, on the vulnerable and the patched code? See [below](#comprehension-experiment). |
+| `npm run eval-comprehension` | services, both code bases indexed | **Answer correctness**: does retrieved code make the model's yes/no answers about CVE-2026-42945 correct, on the vulnerable and the patched code? See [below](#comprehension-experiment) and the [results](#comprehension-results-2026-11-18). |
 
 `npm run eval` reports, for vector-only and hybrid retrieval, the **hit rate** (at least one expected function retrieved) and **mean recall** (share of expected functions retrieved), and saves the full run to `eval/results/`. Options: `--codebase nginx-1.30.0`, `--k 8`, `--refine`. The test set has 11 questions: four on CVE-2026-42945 and others on request bodies, chunked encoding, header parsing, the charset filter, upstream status lines and URI handling. Add your own questions to the JSON file.
 
@@ -278,7 +278,26 @@ LLM_NUM_PREDICT=1500 npm run eval-comprehension -- --k 8 --runs 3
 
 Options: `--modes closed`, `--modes rag`, `--only id1,id2`, `--runs N` (repeat to see how stable answers are). Results go to `eval/comprehension-results/<timestamp>.json` and a transcript `<timestamp>.md`. Check the transcript by hand: a correct verdict with wrong reasoning still counts as a miss when you report results.
 
-**Status.** The script, scoring and retrieval path have been tested end to end against MariaDB and Chroma with a stub model. **It has not yet been run with a real model**, so there are no results to report. The useful comparison is closed vs rag with a 7B+ code model (for example `qwen2.5-coder:7b`).
+### Comprehension results (2026-11-18)
+
+`qwen2.5-coder:7b` answering, `qwen2.5-coder:1.5b` summaries, k = 8, 3 runs per question, on a T4 GPU. Every answer whose verdict matched was also **read by hand**: it counts as understood only if its justification cites the right code and mechanism. Per-answer grades: [`eval/comprehension-results/hand-grading.md`](eval/comprehension-results/hand-grading.md).
+
+| | Closed-book | RAG, 8k window (context cut) | RAG, 16k window (full context) |
+|---|---|---|---|
+| Verdict matches (automatic) | 0/27 | 5/27 | 9/27 |
+| Verdict **and** reasoning correct (hand-graded) | 0/27 | 3/27 | 3/27 |
+| Corrections-log questions | 0/6 | 0/6 | 0/6 |
+| Vulnerable/patched pairs | 0/3 | 0/3 | 0/3 |
+
+What it shows:
+
+- **A pipeline bug, found by the experiment.** In the first run the prompt (~8.7k–10.6k tokens) exceeded `LLM_NUM_CTX=8192`, and Ollama silently dropped its start, where the best-ranked chunk sits. The model then said `e->is_args = 0` was absent from a chunk that contained it. The context is now packed within the window (`CONTEXT_MAX_CHARS`); see the CHANGELOG.
+- **Verdict accuracy overstates comprehension 3×.** With full context the model said YES to the patched-version question 3/3, but quoted the wrong lines each time, and twice argued under `VERDICT: YES` that the reset was absent. Its 2n answers got the verdict right and the mechanism wrong.
+- **Present vs absent.** The model reliably reads and explains a condition that is in one function (`copy-escapes-captures`, 6/6 across both runs). It does not conclude from a missing line (the 1.30.0 reset: UNKNOWN 6/6), connect the zeroed length engine to the live copy engine (0/6), or locate the fix (0/6). CVE-2026-42945 is exactly a missing line connecting two functions.
+- **Closed-book it mostly declines, but also invents:** it called CVE-2026-42945 a header-parsing bug and `ngx_http_script_regex_end_code` "not a standard part of Nginx".
+- **Retrieval limits the corrections-log questions:** `capture-in-replacement-required` names no function and retrieval found neither function it needs; the model repeated the original assistant's mistake in every run.
+
+Limits: one 7B model, 9 questions, one grader. All correct verdicts are YES answers and the vulnerable/patched pair was failed every time, so a yes-bias cannot be ruled out. Next steps: a larger model, more questions with NO answers, and query rewriting for questions that name no function.
 
 ---
 
